@@ -123,16 +123,20 @@ Komunikacja między klientem a serwerem odbywa się poprzez krótkie, synchronic
 ```
 
 ### Struktury reprezentujące pojedyńcze komunikaty:
-#### Klienta:
+Klienta:
 ```
 struct CMSGConnectStart {
     uint8_t code; // CONNECT_START
 }
+```
+```
 struct CMSGConnectInfo {
     uint8_t code; // CONNECT_USERNAME | CONNECT_PASSWORD | CONNECT_FSNAME
     uint64_t data_size;
     char *data;
 }
+```
+```
 struct CMSGRequestOpen {
     uint8_t code; // REQUEST_OPEN
     uint64_t oflag;
@@ -140,103 +144,141 @@ struct CMSGRequestOpen {
     uint64_t path_size;
     char *path;
 }
+```
+```
 struct CMSGRequestClose {
     uint8_t code; // REQUEST_CLOSE
     int64_t fd;
 }
+```
+```
 struct CMSGRequestRead{
     uint8_t code; // REQUEST_READ
     int64_t fd;
     uint64_t size;
 }
+```
+```
 struct CMSGRequestWrite{
     uint8_t code; // REQUEST_WRITE
     int64_t fd;
     uint64_t size;
     char *data;
 }
+```
+```
 struct CMSGRequestLseek{
     uint8_t code; // REQUEST_LSEEK
     int64_t offset;
     int64_t whence;
 }
+```
+```
 struct CMSGRequestFstat{
     uint8_t code; // REQUEST_FSTAT
     struct stat statbuf;
 }
+```
+```
 struct CMSGRequestUnlink{
     uint8_t code; // REQUEST_UNLINK
     uint64_t path_size;
     char *path;
 }
+```
+```
 struct CMSGRequestFlock{
     uint8_t code; // REQUEST_FLOCK
     int64_t fd;
     uint64_t operation;
 }
+```
+```
 struct CMSGDisconnect{
     uint8_t code; // DISCONNECT
 }
 ```
-#### Serwera:
+Serwera:
 
 ```
 struct SMSGProvideUsername {
     uint8_t code; // PROVIDE_USERNAME
 }
+```
+```
 struct SMSGProvidePassword {
     uint8_t code; // PROVIDE_PASSWORD
 }
+```
+```
 struct SMSGProvideFSName {
     uint8_t code; // PROVIDE_FSNAME
 }
+```
+```
 struct SMSGAuthorizationResult {
     uint8_t code; // AUTHORIZATION_OK | AUTHORIZATION_FAILED
 }
+```
+```
 struct SMSGResultOpen {
     uint8_t code; // RESULT_OPEN
     int64_t fd;
     int64_t errno;
 }
+```
+```
 struct SMSGResultClose {
     uint8_t code; // RESULT_CLOSE
     int64_t result;
     int64_t errno;
 }
+```
+```
 struct SMSGResultRead {
     uint8_t code; // RESULT_READ
     int64_t size;
     int64_t errno;
     char *data;
 }
+```
+```
 struct SMSGResultWrite {
     uint8_t code; // RESULT_WRITE
     int64_t result;
     int64_t errno;
 }
+```
+```
 struct SMSGResultLseek {
     uint8_t code; // RESULT_LSEEK
     int64_t offset;
     int64_t errno;
 }
+```
+```
 struct SMSGResultFstat {
     uint8_t code; // RESULT_FSTAT
     int64_t result;
     int64_t errno;
     struct stat statbuf;
 }
+```
+```
 struct SMSGResultUnlink {
     uint8_t code; // RESULT_UNLINK
     int64_t result;
     int64_t errno;
 }
+```
+```
 struct SMSGResultFlock {
     uint8_t code; // RESULT_FLOCK
     int64_t result;
     int64_t errno;
 }
 ```
-#### Wspólne:
+Wspólne:
 ```
 MSGUnexpectedError {
     uint8_t code;
@@ -246,22 +288,21 @@ MSGUnexpectedError {
 Pierwszy bajt każdego rodzaju komunikatu jest nagłówkiem identyfikującym jednoznacznie typ odbieranego komunikatu.
 
 ### Spodziewane odpowiedzi na komunikaty
-```
-CMSGConnectStart -> SMSGProvideUsername | SMSGRejected
-CMSGConnectInfo -> SMSGProvidePassword | SMSGProvideFSName | SMSGAuthorizationResult
-CMSGRequestOpen -> SMSGResultOpen
-CMSGRequestClose -> SMSGResultClose
-CMSGRequestRead -> SMSGResultRead
-CMSGRequestWrite -> SMSGResultWrite
-CMSGRequestLseek -> SMSGResultLseek
-CMSGRequestFstat -> SMSGResultFstat
-CMSGRequestUnlink -> SMSGResultUnlink
-CMSGRequestFlock -> SMSGResultFlock
----
-SMSGProvideUsername -> CMSGConnectInfo
-SMSGProvidePassword -> CMSGConnectInfo
-SMSGProvideFSName -> CMSGConnectInfo
-```
+`CMSGConnectStart -> SMSGProvideUsername | SMSGRejected`  
+`CMSGConnectInfo -> SMSGProvidePassword | SMSGProvideFSName | SMSGAuthorizationResult`  
+`CMSGRequestOpen -> SMSGResultOpen`  
+`CMSGRequestClose -> SMSGResultClose`  
+`CMSGRequestRead -> SMSGResultRead`  
+`CMSGRequestWrite -> SMSGResultWrite`  
+`CMSGRequestLseek -> SMSGResultLseek`  
+`CMSGRequestFstat -> SMSGResultFstat`  
+`CMSGRequestUnlink -> SMSGResultUnlink`  
+`CMSGRequestFlock -> SMSGResultFlock`  
+  
+`SMSGProvideUsername -> CMSGConnectInfo`  
+`SMSGProvidePassword -> CMSGConnectInfo`  
+`SMSGProvideFSName -> CMSGConnectInfo`  
+  
 Na pozostałe komunikaty nie spodziewamy się odpowiedzi. Pojawienie się komunikatu MSGUnexpectedError oznacza otrzymanie przez jedną ze stron komunikatu którego się ona nie spodziewała, i oznacza natychmiastowe zamknięcie połączenia.
 
 ## Analiza protokołu
