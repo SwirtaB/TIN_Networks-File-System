@@ -88,39 +88,7 @@ Zestawiając połączenie klient-serwer (z użyciem protokołu TCP) klient wysy�
 Komunikacja między klientem a serwerem odbywa się poprzez krótkie, synchroniczne konwersacje inicjowane przez klienta. Pierwszą konwersacją po zestawieniu sesji TCP zawsze jest autoryzacja użytkownika, która zestawia połączenie naszego protokołu. Konwersacja kończy się otrzymaniem komunikatu, po którym nadawca nie spodziewa się odpowiedzi.
 
 ### Przykładowa sesja połączenia
-```
-|----------------------|----------------------|
-|        KLIENT        |        SERWER        |
-|----------------------|----------------------|
-|     TCP CONNECT      |      TCP ACCEPT      |
-|                      |                      |
-|                      |                      |
-|    CONNECT_START   ->|                      |
-|                      |<- PROVIDE_USERNAME   |
-|    CONNECT_INFO    ->|                      |
-|                      |<- PROVIDE_PASSWORD   |
-|    CONNECT_INFO    ->|                      |
-|                      |<-  PROVIDE_FSNAME    |
-|    CONNECT_INFO    ->|                      |
-|                      |<-AUTHORIZATION_RESULT|
-|                      |                      |
-|                      |                      |
-|    REQUEST_OPEN    ->|                      |
-|                      |<-   RESULT_OPEN      |
-|                      |                      |
-|                      |                      |
-|    REQUEST_WRITE   ->|                      |
-|                      |<-   RESULT_WRITE     |
-|                      |                      |
-|                      |                      |
-|    REQUEST_CLOSE   ->|                      |
-|                      |<-   RESULT_CLOSE     |
-|                      |                      |
-|                      |                      |
-|     DISCONNECT     ->|                      |
-|    TCP DISCONNECT    |    TCP DISCONNECT    |
-|----------------------|----------------------|
-```
+![session example](./session_example.png)
 
 ### Struktury reprezentujące pojedyńcze komunikaty:
 Klienta:
