@@ -42,8 +42,6 @@ Klientowi zostają udostępnione poniższe funkcjonalności:
     - edycja pliku
     - usunięcie pliku  
 
-
-### Opis komponentów
 __Biblioteka kliencka__  
 <p align="justify">
 Biblioteka udostępnia programiście klasę NFSConnection, do stworzenia której programista musi podać nazwę użytkownika i hasło na systemie serwera oraz nazwę wybranego systemu plików udostępnianego przez serwer. Obiekt tej klasy enkapsuluje w swojej implementacji nawiązanie połączenia z serwerem, autoryzację użytkownika oraz wybranie systemu plików, i udostępnia następujące metody:
@@ -309,5 +307,6 @@ Narzędzie budowania: CMake
 Formater kodu: clang-format - format własny
 
 Użyte biblioteki:
+
 - XDR
 - systemowa biblioteka sockets
