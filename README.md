@@ -86,7 +86,7 @@ Zestawiając połączenie klient-serwer (z użyciem protokołu TCP) klient wysy�
 Komunikacja między klientem a serwerem odbywa się poprzez krótkie, synchroniczne konwersacje inicjowane przez klienta. Pierwszą konwersacją po zestawieniu sesji TCP zawsze jest autoryzacja użytkownika, która zestawia połączenie naszego protokołu. Konwersacja kończy się otrzymaniem komunikatu, po którym nadawca nie spodziewa się odpowiedzi.
 
 ### Przykładowa sesja połączenia
-![session example](./session_example.png)
+![session example](./reports/figures/session_example.png)
 
 ### Struktury reprezentujące pojedyńcze komunikaty:
 Klienta:

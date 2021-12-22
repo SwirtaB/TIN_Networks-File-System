@@ -1,0 +1,7 @@
+#IDE specific folders
+.vscode/
+.idea/
+
+#CMAKE temps
+build/
+bin/
