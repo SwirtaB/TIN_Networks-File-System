@@ -96,10 +96,24 @@ struct CMSGConnectStart {
 }
 ```
 ```
-struct CMSGConnectInfo {
-    uint8_t code; // CONNECT_USERNAME | CONNECT_PASSWORD | CONNECT_FSNAME
-    uint64_t data_size;
-    char *data;
+struct CMSGConnectInfoUsername {
+    uint8_t code; // CONNECT_INFO_USERNAME
+    uint64_t username_size;
+    char *username;
+}
+```
+```
+struct CMSGConnectInfoPassword {
+    uint8_t code; // CONNECT_INFO_PASSWORD
+    uint64_t password_size;
+    char *password;
+}
+```
+```
+struct CMSGConnectInfoFSName {
+    uint8_t code; // CONNECT_INFO_FSNAME
+    uint64_t fsname_size;
+    char *fsname;
 }
 ```
 ```
@@ -135,6 +149,7 @@ struct CMSGRequestWrite{
 ```
 struct CMSGRequestLseek{
     uint8_t code; // REQUEST_LSEEK
+    int64_t fd;
     int64_t offset;
     int64_t whence;
 }
@@ -142,7 +157,7 @@ struct CMSGRequestLseek{
 ```
 struct CMSGRequestFstat{
     uint8_t code; // REQUEST_FSTAT
-    struct stat statbuf;
+    int64_t fd;
 }
 ```
 ```
@@ -156,7 +171,7 @@ struct CMSGRequestUnlink{
 struct CMSGRequestFlock{
     uint8_t code; // REQUEST_FLOCK
     int64_t fd;
-    uint64_t operation;
+    int64_t operation;
 }
 ```
 ```
@@ -182,8 +197,13 @@ struct SMSGProvideFSName {
 }
 ```
 ```
-struct SMSGAuthorizationResult {
-    uint8_t code; // AUTHORIZATION_OK | AUTHORIZATION_FAILED
+struct SMSGAuthorizationOk {
+    uint8_t code; // AUTHORIZATION_OK
+}
+```
+```
+struct SMSGAuthorizationFailed {
+    uint8_t code; // AUTHORIZATION_FAILED
 }
 ```
 ```
@@ -203,7 +223,7 @@ struct SMSGResultClose {
 ```
 struct SMSGResultRead {
     uint8_t code; // RESULT_READ
-    int64_t size;
+    uint64_t size;
     int64_t errno;
     char *data;
 }
