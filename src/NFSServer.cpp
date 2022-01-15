@@ -3,8 +3,8 @@
 
 namespace nfs
 {
-    void NFSServer::run(uint16_t port = nfs::DEFAULT_PORT)
+    void NFSServer::run(uint16_t port)
     {
-        nfs::listen_for_connections(port, nfs::worker_function);
+        nfs::listen_for_connections(worker_function, port);
     }
 }

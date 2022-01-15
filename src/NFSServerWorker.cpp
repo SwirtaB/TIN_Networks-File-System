@@ -3,12 +3,12 @@
 namespace nfs
 {
 
-    void worker_function(int descriptor)
+    void worker_function(int client_socket)
     {
-        ServerWorker(descriptor).run();
+        ServerWorker(client_socket).run();
     }
 
-    ServerWorker::ServerWorker(int descriptor_) : descriptor(descriptor_) {}
+    ServerWorker::ServerWorker(int client_socket_) : client_socket(client_socket_) {}
 
     void ServerWorker::run()
     {
