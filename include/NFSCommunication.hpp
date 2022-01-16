@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NFSMessages.hpp"
+#include <memory>
 
 namespace nfs
 {

@@ -7,7 +7,13 @@ extern "C"
 #include <netdb.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
 }
+
+#ifdef __linux__
+#define htonll(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
+#define ntohll(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
+#endif
 
 namespace nfs
 {

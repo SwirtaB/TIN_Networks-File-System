@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <vector>
+#include <cstdlib>
 
 extern "C"
 {
@@ -18,7 +19,7 @@ namespace nfs
 
         char *data();
 
-        ssize_t size();
+        size_t size();
 
         void push_uint8_t(uint8_t code);
 

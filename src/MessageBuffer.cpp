@@ -1,5 +1,17 @@
 #include "../include/MessageBuffer.hpp"
 
+#include <cstring>
+
+extern "C"
+{
+#include <netinet/in.h>
+}
+
+#ifdef __linux__
+#define htonll(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
+#define ntohll(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
+#endif
+
 namespace nfs
 {
     MessageBuffer::MessageBuffer() {}
@@ -14,7 +26,7 @@ namespace nfs
         return buffer.data();
     }
 
-    ssize_t MessageBuffer::size()
+    size_t MessageBuffer::size()
     {
         return buffer.size();
     }

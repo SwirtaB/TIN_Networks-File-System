@@ -15,7 +15,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS)
 include(CTest)
 enable_testing()
 
-set(LIB_NAME "tinnfslib")
+set(LIB_NAME "tinnfs")
 add_library(${LIB_NAME} SHARED ${LIB_SRC})
 
 target_include_directories(${LIB_NAME} PRIVATE ${CMAKE_HOME_DIRECTORY}/include)
@@ -24,6 +24,11 @@ if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 else()
     target_compile_options(${LIB_NAME} PRIVATE -Ofast)
 endif()
+
+set(BUILD_EXAMPLES True)
+if (BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif ()
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
