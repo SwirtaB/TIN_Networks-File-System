@@ -5,15 +5,15 @@
 namespace nfs
 {
 
-    void worker_function(int descriptor);
+    void worker_function(int client_socket);
 
     class ServerWorker
     {
     public:
-        ServerWorker(int descriptor_);
+        ServerWorker(int client_socket_);
         void run();
 
     private:
-        int descriptor;
+        int client_socket;
     };
 }
