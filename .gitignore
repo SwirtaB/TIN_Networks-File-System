@@ -4,5 +4,11 @@
 
 #CMAKE temps
 build/
+cmake-build-debug/
+cmake-build-release/
+
+#binary output
 bin/
+
+#lib output
 lib/
