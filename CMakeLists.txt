@@ -12,9 +12,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/lib)
 set(CMAKE_EXPORT_COMPILE_COMMANDS)
 
-include(CTest)
-enable_testing()
-
 set(LIB_NAME "tinnfs")
 add_library(${LIB_NAME} SHARED ${LIB_SRC})
 
@@ -29,7 +26,3 @@ set(BUILD_EXAMPLES True)
 if (BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif ()
-
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
