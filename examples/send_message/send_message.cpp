@@ -37,6 +37,7 @@ int main(int argc, char **argv) {
             nfs::SMSGResultRead msg(0, size, data);
             nfs::send_message(sockfd, msg);
         });
+
     } else {
         exit(2);
     }

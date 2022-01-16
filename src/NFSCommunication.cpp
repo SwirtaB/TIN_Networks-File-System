@@ -2,12 +2,12 @@
 
 extern "C"
 {
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <stdio.h>
 }
 
 #ifdef __linux__
@@ -18,174 +18,141 @@ extern "C"
 namespace nfs
 {
 
-    int connect_to_server(const char *hostname, uint16_t port)
-    {
-        int sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (sock < 0)
-        {
-            perror("connect_to_server: Error opening socket");
-            return sock;
-        }
-
-        struct sockaddr_in server_addr;
-        server_addr.sin_family = AF_INET;
-        server_addr.sin_port = htons(port);
-
-        struct hostent *server_hostent = gethostbyname(hostname);
-        if (server_hostent == 0)
-        {
-            perror("connect_to_server: Error getting host by name");
-            return -1;
-        }
-        memcpy(&server_addr.sin_addr, server_hostent->h_addr, server_hostent->h_length);
-
-        int connect_res = connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
-        if (connect_res < 0)
-        {
-            perror("connect_to_server: Error connecting to server");
-            return connect_res;
-        }
-
+int connect_to_server(const char *hostname, uint16_t port) {
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
+        perror("connect_to_server: Error opening socket");
         return sock;
     }
 
-    int disconnect_from_server(int descriptor)
-    {
-        return close(descriptor);
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port   = htons(port);
+
+    struct hostent *server_hostent = gethostbyname(hostname);
+    if (server_hostent == 0) {
+        perror("connect_to_server: Error getting host by name");
+        return -1;
+    }
+    memcpy(&server_addr.sin_addr, server_hostent->h_addr, server_hostent->h_length);
+
+    int connect_res = connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (connect_res < 0) {
+        perror("connect_to_server: Error connecting to server");
+        return connect_res;
     }
 
-    int listen_for_connections(void (*worker_function)(int), uint16_t port, int queue_limit)
-    {
-        int sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (sock < 0)
-        {
-            perror("listen_for_connections: Error opening socket");
-            return sock;
-        }
+    return sock;
+}
 
-        struct sockaddr_in server_addr;
-        server_addr.sin_family = AF_INET;
-        server_addr.sin_port = htons(port);
-        server_addr.sin_addr.s_addr = INADDR_ANY;
+int disconnect_from_server(int descriptor) {
+    return close(descriptor);
+}
 
-        int bind_res = bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
-        if (bind_res < 0)
-        {
-            perror("listen_for_connections: Error binding");
-            return bind_res;
-        }
+int listen_for_connections(void (*worker_function)(int), uint16_t port, int queue_limit) {
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
+        perror("listen_for_connections: Error opening socket");
+        return sock;
+    }
 
-        while (true)
-        {
-            if (listen(sock, queue_limit) == 0)
-            {
-                struct sockaddr_in client_addr;
-                socklen_t client_addr_len;
-                int client_sock = accept(sock, (struct sockaddr *)&client_addr, &client_addr_len);
-                if (client_sock < 0)
-                {
-                    perror("listen_for_connections: Error accepting connection");
-                    return client_sock;
-                };
+    struct sockaddr_in server_addr;
+    server_addr.sin_family      = AF_INET;
+    server_addr.sin_port        = htons(port);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
 
-                if (fork() == 0)
-                { // child
-                    close(sock);
-                    worker_function(client_sock);
-                    exit(0);
-                }
-                else
-                { // parent
-                    close(client_sock);
-                }
+    int bind_res = bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (bind_res < 0) {
+        perror("listen_for_connections: Error binding");
+        return bind_res;
+    }
+
+    while (true) {
+        if (listen(sock, queue_limit) == 0) {
+            struct sockaddr_in client_addr;
+            socklen_t          client_addr_len;
+            int                client_sock = accept(sock, (struct sockaddr *)&client_addr, &client_addr_len);
+            if (client_sock < 0) {
+                perror("listen_for_connections: Error accepting connection");
+                return client_sock;
+            };
+
+            if (fork() == 0) { // child
+                close(sock);
+                worker_function(client_sock);
+                exit(0);
+            } else { // parent
+                close(client_sock);
             }
         }
     }
+}
 
-    int send_message(int descriptor, MSG &message)
-    {
-        // make message buffer
-        MessageBuffer buffer;
-        message.push_to_buffer(buffer);
+int send_message(int descriptor, MSG &message) {
+    // make message buffer
+    MessageBuffer buffer;
+    message.push_to_buffer(buffer);
 
-        // send message size
-        int64_t message_size = htonll(buffer.size());
-        char message_size_buff[sizeof(message_size)];
-        memcpy(message_size_buff, &message_size, sizeof(message_size));
-        size_t size_sent = 0;
-        while (static_cast<size_t>(size_sent) < sizeof(message_size))
-        {
-            ssize_t res = send(descriptor, message_size_buff + size_sent, sizeof(message_size) - size_sent, 0);
-            if (res <= 0)
-            {
-                return res;
-            }
-            else
-            {
-                size_sent += res;
-            }
+    // send message size
+    int64_t message_size = htonll(buffer.size());
+    char    message_size_buff[sizeof(message_size)];
+    memcpy(message_size_buff, &message_size, sizeof(message_size));
+    size_t size_sent = 0;
+    while (static_cast<size_t>(size_sent) < sizeof(message_size)) {
+        ssize_t res = send(descriptor, message_size_buff + size_sent, sizeof(message_size) - size_sent, 0);
+        if (res <= 0) {
+            return res;
+        } else {
+            size_sent += res;
         }
-
-        // send message
-        ssize_t to_send = buffer.size();
-        ssize_t sent = 0;
-        while (sent < to_send)
-        {
-            ssize_t res = send(descriptor, buffer.data() + sent, to_send - sent, 0);
-            if (res <= 0)
-            {
-                return res;
-            }
-            else
-            {
-                sent += res;
-            }
-        }
-        return size_sent + sent;
     }
 
-    int wait_for_message(int descriptor, std::unique_ptr<MSG> &msg_ptr)
-    {
-        // receive size
-        char size_buffer[sizeof(int64_t)];
-        size_t received_size = 0;
-        while (received_size < sizeof(int64_t))
-        {
-            int received = recv(descriptor, size_buffer + received_size, sizeof(int64_t) - received_size, 0);
-            if (received <= 0)
-            {
-                return received;
-            }
-            else
-            {
-                received_size += received;
-            }
+    // send message
+    ssize_t to_send = buffer.size();
+    ssize_t sent    = 0;
+    while (sent < to_send) {
+        ssize_t res = send(descriptor, buffer.data() + sent, to_send - sent, 0);
+        if (res <= 0) {
+            return res;
+        } else {
+            sent += res;
         }
-        uint64_t size = ntohll(*reinterpret_cast<int64_t *>(size_buffer));
+    }
+    return size_sent + sent;
+}
 
-        // receive message
-        char *message_buffer = new char[size];
-        size_t received_message = 0;
-        while (received_message < size)
-        {
-            int received = recv(descriptor, message_buffer + received_message, size - received_message, 0);
-            if (received <= 0)
-            {
-                return received;
-            }
-            else
-            {
-                received_message += received;
-            }
+int wait_for_message(int descriptor, std::unique_ptr<MSG> &msg_ptr) {
+    // receive size
+    char   size_buffer[sizeof(int64_t)];
+    size_t received_size = 0;
+    while (received_size < sizeof(int64_t)) {
+        int received = recv(descriptor, size_buffer + received_size, sizeof(int64_t) - received_size, 0);
+        if (received <= 0) {
+            return received;
+        } else {
+            received_size += received;
         }
-        MessageBuffer msgbuff(message_buffer, size);
-        delete[](message_buffer);
+    }
+    uint64_t size = ntohll(*reinterpret_cast<int64_t *>(size_buffer));
 
-        // make message
-        MSGCode code = static_cast<MSGCode>(msgbuff.data()[0]);
-        MSG *msg;
-        switch (code)
-        {
+    // receive message
+    char  *message_buffer   = new char[size];
+    size_t received_message = 0;
+    while (received_message < size) {
+        int received = recv(descriptor, message_buffer + received_message, size - received_message, 0);
+        if (received <= 0) {
+            return received;
+        } else {
+            received_message += received;
+        }
+    }
+    MessageBuffer msgbuff(message_buffer, size);
+    delete[](message_buffer);
+
+    // make message
+    MSGCode code = static_cast<MSGCode>(msgbuff.data()[0]);
+    MSG    *msg;
+    switch (code) {
         case MSGCode::CONNECT_START:
             msg = new CMSGConnectStart;
             break;
@@ -269,9 +236,9 @@ namespace nfs
             break;
         default:
             exit(123);
-        }
-
-        msg_ptr.reset(msg);
-        return received_size + received_message;
     }
+
+    msg_ptr.reset(msg);
+    return received_size + received_message;
 }
+} // namespace nfs
