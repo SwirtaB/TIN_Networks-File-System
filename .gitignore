@@ -5,3 +5,4 @@
 #CMAKE temps
 build/
 bin/
+lib/
