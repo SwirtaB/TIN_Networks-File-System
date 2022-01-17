@@ -1,6 +1,7 @@
 #IDE specific folders
 .vscode/
 .idea/
+.cache/
 
 #CMAKE temps
 build/

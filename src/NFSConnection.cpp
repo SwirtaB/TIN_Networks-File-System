@@ -30,7 +30,7 @@ ConnectReturn NFSConnection::log_in(const std::string &username, const std::stri
     if (result != nfs::OK)
         return result;
 
-    auto result = send_password(password);
+    result = send_password(password);
     if (result != nfs::OK)
         return result;
 
@@ -88,7 +88,7 @@ ConnectReturn NFSConnection::access_filesystem(const std::string filesystemName)
     if (nfs::send_message(m_sockfd, cmsg) < filesystemName.size())
         return nfs::TCP_ERROR;
 
-    int result = nfs::wait_for_message(m_sockfd, msg);
+    result = nfs::wait_for_message(m_sockfd, msg);
     if (result <= 0 || msg == nullptr)
         return nfs::SERVER_NOT_RESPONDING;
 
