@@ -118,7 +118,7 @@ int NFSConnection::close(int fd) {
     }
 
     // Rzutowanie widaomości na spodziewany typ w celu odczytania zawartości.
-    // Obsługa błędu rzutowania - spodziewano się innej wiadomości
+    // Obsługa błędu rzutowania - spodziewano się innej wiadomości.
     nfs::SMSGResultClose *rmsg = dynamic_cast<nfs::SMSGResultClose *>(msg.get());
     if (rmsg == nullptr) {
         m_errno = EBADE;
@@ -132,6 +132,53 @@ int NFSConnection::close(int fd) {
     }
 
     return 0;
+}
+
+ssize_t NFSConnection::read(int fd, void *buf, size_t count) {
+    // Weryfikacja czy mamy zestawione połączenie i autoryzację.
+    if (!m_access) {
+        m_errno = EACCES;
+        return -1;
+    }
+
+    std::unique_ptr<nfs::MSG> msg(nullptr);
+    nfs::CMSGRequestRead      cmsg(fd, count);
+
+    // Wysłanie wiadomości, sparwdzenie czy została wysłana
+    int result = nfs::send_message(m_sockfd, cmsg);
+    if (result == 0) {
+        m_errno = EHOSTUNREACH;
+        return -1;
+    }
+
+    // Oczekiwanie na wiadomość zwrotną od serwera.
+    // Obsługa błędów zwracanych przez funkcję.
+    result = nfs::wait_for_message(m_sockfd, msg);
+    if (result == 0) {
+        m_errno = EHOSTUNREACH;
+        return -1;
+    } else if (result < 0 || msg == nullptr) {
+        m_errno = EBADE;
+        return -1;
+    }
+
+    // Rzutowanie widaomości na spodziewany typ w celu odczytania zawartości.
+    // Obsługa błędu rzutowania - spodziewano się innej wiadomości.
+    nfs::SMSGResultRead *rmsg = dynamic_cast<nfs::SMSGResultRead *>(msg.get());
+    if (rmsg == nullptr) {
+        m_errno = EBADE;
+        return -1;
+    }
+
+    // Sprawdzenie czy nie wystąpił błąd.
+    if (rmsg->_errno != 0) {
+        m_errno = rmsg->_errno;
+        return -1;
+    }
+
+    // Przekazanie wartości do bufora i zwrócenie ilości odczytanych znaków.
+    buf = rmsg->data;
+    return rmsg->data_size;
 }
 
 int64_t NFSConnection::get_error() {
