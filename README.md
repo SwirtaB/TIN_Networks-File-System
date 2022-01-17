@@ -322,11 +322,10 @@ Główną wadą tego rozwiązania jest przesyłanie żywym tekstem hasła przez 
 
 
 ## Szczegóły implementacji i używane biblioteki
-Język implementacji: C++20  
+Język implementacji: C++17  
 Narzędzie budowania: CMake  
 Formater kodu: clang-format - format własny
 
 Użyte biblioteki:
-
 - XDR
 - systemowa biblioteka sockets

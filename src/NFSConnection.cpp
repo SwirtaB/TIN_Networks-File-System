@@ -1,9 +1,27 @@
 #include "NFSConnection.hpp"
 
+#include "NFSCommunication.hpp"
+#include "NFSMessages.hpp"
+
+#include <cstdint>
+#include <cstring>
+#include <string>
+
 namespace nfs
 {
 
 NFSConnection::NFSConnection() : m_access(false), m_sockfd(-1) {}
+
+NFSConnection::~NFSConnection() {
+    if (m_sockfd >= 0) {
+        // TODO: czy próba retransmisji wiadomości disconnect to dobry pomysł?
+        nfs::CMSGDisconnect msg;
+        int                 repeat = 3;
+        while (nfs::send_message(m_sockfd, msg) <= 0 || repeat != 0) {
+            --repeat;
+        }
+    }
+}
 
 ConnectReturn NFSConnection::connect(const std::string &hostName,
                                      const std::string &username,
@@ -23,6 +41,40 @@ ConnectReturn NFSConnection::connect(const std::string &hostName,
 
     m_access = true;
     return nfs::OK;
+}
+
+int NFSConnection::open(char *path, int oflag, int mode) {
+    if (!m_access) {
+        m_errno = EACCES;
+        return -1;
+    }
+
+    std::unique_ptr<nfs::MSG> msg(nullptr);
+    nfs::CMSGRequestOpen      cmsg(oflag, mode, std::strlen(path), path);
+
+    int result = nfs::wait_for_message(m_sockfd, msg);
+    if (result <= 0 || msg == nullptr) {
+        m_errno = EHOSTUNREACH;
+        return -1;
+    }
+
+    nfs::SMSGResultOpen *rmsg = dynamic_cast<nfs::SMSGResultOpen *>(msg.get());
+    if (rmsg == nullptr) {
+        m_errno = EBADE;
+        return -1;
+    }
+
+    auto fd = rmsg->fd;
+    if (fd < 0) {
+        m_errno = rmsg->_errno;
+        return -1;
+    }
+
+    return fd;
+}
+
+int64_t NFSConnection::get_error() {
+    return m_errno;
 }
 
 ConnectReturn NFSConnection::log_in(const std::string &username, const std::string &password) {
@@ -98,4 +150,5 @@ ConnectReturn NFSConnection::access_filesystem(const std::string filesystemName)
 
     return nfs::OK;
 }
+
 } // namespace nfs
