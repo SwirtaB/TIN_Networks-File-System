@@ -44,6 +44,7 @@ ConnectReturn NFSConnection::connect(const std::string &hostName,
 }
 
 int NFSConnection::open(char *path, int oflag, int mode) {
+    // Weryfikacja czy mamy zestawione połączenie i autoryzację.
     if (!m_access) {
         m_errno = EACCES;
         return -1;
@@ -52,18 +53,33 @@ int NFSConnection::open(char *path, int oflag, int mode) {
     std::unique_ptr<nfs::MSG> msg(nullptr);
     nfs::CMSGRequestOpen      cmsg(oflag, mode, std::strlen(path), path);
 
-    int result = nfs::wait_for_message(m_sockfd, msg);
-    if (result <= 0 || msg == nullptr) {
+    // Wysłanie wiadomości, sparwdzenie czy została wysłana
+    int result = nfs::send_message(m_sockfd, cmsg);
+    if (result <= 0) {
         m_errno = EHOSTUNREACH;
         return -1;
     }
 
+    // Oczekiwanie na wiadomość zwrotną od serwera.
+    // Obsługa błędów zwracanych przez funkcję.
+    result = nfs::wait_for_message(m_sockfd, msg);
+    if (result == 0) {
+        m_errno = EHOSTUNREACH;
+        return -1;
+    } else if (result < 0 || msg == nullptr) {
+        m_errno = EBADE;
+        return -1;
+    }
+
+    // Rzutowanie widaomości na spodziewany typ w celu odczytania zawartości.
+    // Obsługa błędu rzutowania - spodziewano się innej wiadomości
     nfs::SMSGResultOpen *rmsg = dynamic_cast<nfs::SMSGResultOpen *>(msg.get());
     if (rmsg == nullptr) {
         m_errno = EBADE;
         return -1;
     }
 
+    // Odczytanie informacji z wiadomości i zwrócenie ich jako wyniku funkcji.
     auto fd = rmsg->fd;
     if (fd < 0) {
         m_errno = rmsg->_errno;
@@ -71,6 +87,51 @@ int NFSConnection::open(char *path, int oflag, int mode) {
     }
 
     return fd;
+}
+
+int NFSConnection::close(int fd) {
+    // Weryfikacja czy mamy zestawione połączenie i autoryzację.
+    if (!m_access) {
+        m_errno = EACCES;
+        return -1;
+    }
+
+    std::unique_ptr<nfs::MSG> msg(nullptr);
+    nfs::CMSGRequestClose     cmsg(fd);
+
+    // Wysłanie wiadomości, sparwdzenie czy została wysłana
+    int result = nfs::send_message(m_sockfd, cmsg);
+    if (result == 0) {
+        m_errno = EHOSTUNREACH;
+        return -1;
+    }
+
+    // Oczekiwanie na wiadomość zwrotną od serwera.
+    // Obsługa błędów zwracanych przez funkcję.
+    result = nfs::wait_for_message(m_sockfd, msg);
+    if (result == 0) {
+        m_errno = EHOSTUNREACH;
+        return -1;
+    } else if (result < 0 || msg == nullptr) {
+        m_errno = EBADE;
+        return -1;
+    }
+
+    // Rzutowanie widaomości na spodziewany typ w celu odczytania zawartości.
+    // Obsługa błędu rzutowania - spodziewano się innej wiadomości
+    nfs::SMSGResultClose *rmsg = dynamic_cast<nfs::SMSGResultClose *>(msg.get());
+    if (rmsg == nullptr) {
+        m_errno = EBADE;
+        return -1;
+    }
+
+    // Odczytanie informacji z wiadomości i zwrócenie ich jako wyniku funkcji.
+    if (rmsg->result < 0) {
+        m_errno = rmsg->_errno;
+        return -1;
+    }
+
+    return 0;
 }
 
 int64_t NFSConnection::get_error() {

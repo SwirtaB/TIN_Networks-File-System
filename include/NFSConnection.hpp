@@ -30,7 +30,7 @@ class NFSConnection
                           const std::string &password,
                           const std::string &filesystemName);
     int           open(char *path, int oflag, int mode);
-    int           close(int fd);                                // TODO close
+    int           close(int fd);
     ssize_t       read(int fd, void *buf, size_t count);        // TODO read
     ssize_t       write(int fd, const void *buf, size_t count); // TODO write
     off_t         lseek(int fd, off_t offset, int whence);      // TODO lseek
