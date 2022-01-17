@@ -31,12 +31,12 @@ class NFSConnection
                           const std::string &filesystemName);
     int           open(char *path, int oflag, int mode);
     int           close(int fd);
-    ssize_t       read(int fd, void *buf, size_t count);        // TODO read
-    ssize_t       write(int fd, const void *buf, size_t count); // TODO write
-    off_t         lseek(int fd, off_t offset, int whence);      // TODO lseek
-    int           fstat(int fd, struct stat *statbyf);          // TODO fstat
-    int           unlink(const char *path);                     // TODO unlink
-    int           flock(int fd, int operation);                 // TODO flock
+    ssize_t       read(int fd, void *buf, size_t count);
+    ssize_t       write(int fd, const void *buf, size_t count);
+    off_t         lseek(int fd, off_t offset, int whence); // TODO lseek
+    int           fstat(int fd, struct stat *statbyf);     // TODO fstat
+    int           unlink(const char *path);                // TODO unlink
+    int           flock(int fd, int operation);            // TODO flock
     int64_t       get_error();
 
   private:
