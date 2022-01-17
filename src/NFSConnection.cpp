@@ -354,6 +354,9 @@ int NFSConnection::send_and_wait(nfs::MSG &clientMessage, std::unique_ptr<MSG> &
         m_errno = EBADE;
         return -1;
     }
+
+    // Poprawne wykonanie
+    return 0;
 }
 
 } // namespace nfs
