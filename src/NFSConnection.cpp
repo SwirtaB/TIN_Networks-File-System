@@ -226,6 +226,38 @@ ssize_t NFSConnection::write(int fd, const void *buf, size_t count) {
     return rmsg->result;
 }
 
+off_t NFSConnection::lseek(int fd, off_t offset, int whence) {
+    // Weryfikacja czy mamy zestawione połączenie i autoryzację.
+    if (!m_access) {
+        m_errno = EACCES;
+        return (off_t)-1;
+    }
+
+    std::unique_ptr<nfs::MSG> msg(nullptr);
+    nfs::CMSGRequestLseek     cmsg(fd, offset, whence);
+
+    // m_errno ustawiane przez metodę send_and_wait.
+    if (send_and_wait(cmsg, msg) < 0) {
+        return (off_t)-1;
+    }
+
+    // Rzutowanie widaomości na spodziewany typ w celu odczytania zawartości.
+    // Obsługa błędu rzutowania - spodziewano się innej wiadomości.
+    nfs::SMSGResultLseek *rmsg = dynamic_cast<nfs::SMSGResultLseek *>(msg.get());
+    if (rmsg == nullptr) {
+        m_errno = EBADE;
+        return (off_t)-1;
+    }
+
+    // Sprawdzenie czy nie wystąpił błąd.
+    if (rmsg->_errno != 0) {
+        m_errno = rmsg->_errno;
+        return (off_t)-1;
+    }
+
+    return rmsg->offset;
+}
+
 int64_t NFSConnection::get_error() {
     return m_errno;
 }
@@ -302,6 +334,26 @@ ConnectReturn NFSConnection::access_filesystem(const std::string filesystemName)
         return nfs::ACCESS_DENIED;
 
     return nfs::OK;
+}
+
+int NFSConnection::send_and_wait(nfs::MSG &clientMessage, std::unique_ptr<MSG> &resultMessage_ptr) {
+    // Wysłanie wiadomości, sparwdzenie czy została wysłana
+    int result = nfs::send_message(m_sockfd, clientMessage);
+    if (result == 0) {
+        m_errno = EHOSTUNREACH;
+        return -1;
+    }
+
+    // Oczekiwanie na wiadomość zwrotną od serwera.
+    // Obsługa błędów zwracanych przez funkcję.
+    result = nfs::wait_for_message(m_sockfd, resultMessage_ptr);
+    if (result == 0) {
+        m_errno = EHOSTUNREACH;
+        return -1;
+    } else if (result < 0 || resultMessage_ptr == nullptr) {
+        m_errno = EBADE;
+        return -1;
+    }
 }
 
 } // namespace nfs
