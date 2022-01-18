@@ -206,6 +206,39 @@ off_t NFSConnection::lseek(int fd, off_t offset, int whence) {
     return rmsg->offset;
 }
 
+int NFSConnection::fstat(int fd, struct stat *statbuf) {
+    // Weryfikacja czy mamy zestawione połączenie i autoryzację.
+    if (!m_access) {
+        m_errno = EACCES;
+        return -1;
+    }
+
+    std::unique_ptr<nfs::MSG> msg(nullptr);
+    nfs::CMSGRequestFstat     cmsg(fd);
+
+    // m_errno ustawiane przez metodę send_and_wait.
+    if (send_and_wait(cmsg, msg) < 0) {
+        return -1;
+    }
+
+    // Rzutowanie widaomości na spodziewany typ w celu odczytania zawartości.
+    // Obsługa błędu rzutowania - spodziewano się innej wiadomości.
+    nfs::SMSGResultFstat *rmsg = dynamic_cast<nfs::SMSGResultFstat *>(msg.get());
+    if (rmsg == nullptr) {
+        m_errno = EBADE;
+        return -1;
+    }
+
+    // Sprawdzenie czy nie wystąpił błąd i ustawienie flagi errno.
+    if (rmsg->result != 0) {
+        m_errno = rmsg->_errno;
+        return -1;
+    }
+
+    *statbuf = rmsg->statbuf;
+    return 0;
+}
+
 int64_t NFSConnection::get_error() {
     return m_errno;
 }
