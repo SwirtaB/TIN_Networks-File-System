@@ -143,9 +143,9 @@ class NFSConnection
 
     int send_and_wait(nfs::MSG &clientMessage, std::unique_ptr<MSG> &resultMessage_ptr);
 
-    bool    m_access;
-    int     m_sockfd;
-    int64_t m_errno;
+    bool    m_access; // true if authentication was successful
+    int     m_sockfd; // owned socket descriptor
+    int64_t m_errno;  // errno code
 };
 } // namespace nfs
 
