@@ -10,7 +10,7 @@
 namespace nfs
 {
 
-NFSConnection::NFSConnection() : m_access(false), m_sockfd(-1) {}
+NFSConnection::NFSConnection() : m_access(false), m_sockfd(-1), m_errno(0) {}
 
 NFSConnection::~NFSConnection() {
     if (m_sockfd >= 0) {
