@@ -138,7 +138,7 @@ ssize_t NFSConnection::read(int fd, void *buf, size_t count) {
     }
 
     // Przekazanie wartości do bufora i zwrócenie ilości odczytanych znaków.
-    buf = rmsg->data;
+    std::memcpy(buf, rmsg->data, rmsg->data_size);
     return rmsg->data_size;
 }
 
