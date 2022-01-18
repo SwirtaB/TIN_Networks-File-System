@@ -35,8 +35,8 @@ class NFSConnection
     ssize_t       write(int fd, const void *buf, size_t count);
     off_t         lseek(int fd, off_t offset, int whence);
     int           fstat(int fd, struct stat *statbuf);
-    int           unlink(const char *path);     // TODO unlink
-    int           flock(int fd, int operation); // TODO flock
+    int           unlink(const char *path);
+    int           flock(int fd, int operation);
     int64_t       get_error();
 
   private:

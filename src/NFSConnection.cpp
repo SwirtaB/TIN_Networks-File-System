@@ -239,6 +239,66 @@ int NFSConnection::fstat(int fd, struct stat *statbuf) {
     return 0;
 }
 
+int NFSConnection::unlink(const char *path) {
+    // Weryfikacja czy mamy zestawione połączenie i autoryzację.
+    if (!m_access) {
+        m_errno = EACCES;
+        return -1;
+    }
+
+    std::unique_ptr<nfs::MSG> msg(nullptr);
+    nfs::CMSGRequestUnlink    cmsg(std::strlen(path), path);
+
+    // m_errno ustawiane przez metodę send_and_wait.
+    if (send_and_wait(cmsg, msg) < 0) {
+        return -1;
+    }
+
+    nfs::SMSGResultUnlink *rmsg = dynamic_cast<nfs::SMSGResultUnlink *>(msg.get());
+    if (rmsg == nullptr) {
+        m_errno = EBADE;
+        return -1;
+    }
+
+    // Sprawdzenie czy nie wystąpił błąd i ustawienie flagi errno.
+    if (rmsg->result != 0) {
+        m_errno = rmsg->_errno;
+        return -1;
+    }
+
+    // Successfully finished.
+    return 0;
+}
+
+int NFSConnection::flock(int fd, int operation) {
+    // Weryfikacja czy mamy zestawione połączenie i autoryzację.
+    if (!m_access) {
+        m_errno = EACCES;
+        return -1;
+    }
+
+    std::unique_ptr<nfs::MSG> msg(nullptr);
+    nfs::CMSGRequestFlock     cmsg(fd, operation);
+
+    // m_errno ustawiane przez metodę send_and_wait.
+    if (send_and_wait(cmsg, msg) < 0) {
+        return -1;
+    }
+
+    nfs::SMSGResultFlock *rmsg = dynamic_cast<nfs::SMSGResultFlock *>(msg.get());
+    if (rmsg == nullptr) {
+        m_errno = EBADE;
+        return -1;
+    }
+
+    if (rmsg->result != 0) {
+        m_errno = rmsg->_errno;
+        return -1;
+    }
+
+    return 0;
+}
+
 int64_t NFSConnection::get_error() {
     return m_errno;
 }
