@@ -53,21 +53,8 @@ int NFSConnection::open(char *path, int oflag, int mode) {
     std::unique_ptr<nfs::MSG> msg(nullptr);
     nfs::CMSGRequestOpen      cmsg(oflag, mode, std::strlen(path), path);
 
-    // Wysłanie wiadomości, sparwdzenie czy została wysłana
-    int result = nfs::send_message(m_sockfd, cmsg);
-    if (result <= 0) {
-        m_errno = EHOSTUNREACH;
-        return -1;
-    }
-
-    // Oczekiwanie na wiadomość zwrotną od serwera.
-    // Obsługa błędów zwracanych przez funkcję.
-    result = nfs::wait_for_message(m_sockfd, msg);
-    if (result == 0) {
-        m_errno = EHOSTUNREACH;
-        return -1;
-    } else if (result < 0 || msg == nullptr) {
-        m_errno = EBADE;
+    // m_errno ustawiane przez metodę send_and_wait.
+    if (send_and_wait(cmsg, msg) < 0) {
         return -1;
     }
 
@@ -99,21 +86,8 @@ int NFSConnection::close(int fd) {
     std::unique_ptr<nfs::MSG> msg(nullptr);
     nfs::CMSGRequestClose     cmsg(fd);
 
-    // Wysłanie wiadomości, sparwdzenie czy została wysłana
-    int result = nfs::send_message(m_sockfd, cmsg);
-    if (result == 0) {
-        m_errno = EHOSTUNREACH;
-        return -1;
-    }
-
-    // Oczekiwanie na wiadomość zwrotną od serwera.
-    // Obsługa błędów zwracanych przez funkcję.
-    result = nfs::wait_for_message(m_sockfd, msg);
-    if (result == 0) {
-        m_errno = EHOSTUNREACH;
-        return -1;
-    } else if (result < 0 || msg == nullptr) {
-        m_errno = EBADE;
+    // m_errno ustawiane przez metodę send_and_wait.
+    if (send_and_wait(cmsg, msg) < 0) {
         return -1;
     }
 
@@ -144,21 +118,8 @@ ssize_t NFSConnection::read(int fd, void *buf, size_t count) {
     std::unique_ptr<nfs::MSG> msg(nullptr);
     nfs::CMSGRequestRead      cmsg(fd, count);
 
-    // Wysłanie wiadomości, sparwdzenie czy została wysłana
-    int result = nfs::send_message(m_sockfd, cmsg);
-    if (result == 0) {
-        m_errno = EHOSTUNREACH;
-        return -1;
-    }
-
-    // Oczekiwanie na wiadomość zwrotną od serwera.
-    // Obsługa błędów zwracanych przez funkcję.
-    result = nfs::wait_for_message(m_sockfd, msg);
-    if (result == 0) {
-        m_errno = EHOSTUNREACH;
-        return -1;
-    } else if (result < 0 || msg == nullptr) {
-        m_errno = EBADE;
+    // m_errno ustawiane przez metodę send_and_wait.
+    if (send_and_wait(cmsg, msg) < 0) {
         return -1;
     }
 
@@ -191,21 +152,8 @@ ssize_t NFSConnection::write(int fd, const void *buf, size_t count) {
     std::unique_ptr<nfs::MSG> msg(nullptr);
     nfs::CMSGRequestWrite     cmsg(fd, count, static_cast<const char *>(buf));
 
-    // Wysłanie wiadomości, sparwdzenie czy została wysłana
-    int result = nfs::send_message(m_sockfd, cmsg);
-    if (result == 0) {
-        m_errno = EHOSTUNREACH;
-        return -1;
-    }
-
-    // Oczekiwanie na wiadomość zwrotną od serwera.
-    // Obsługa błędów zwracanych przez funkcję.
-    result = nfs::wait_for_message(m_sockfd, msg);
-    if (result == 0) {
-        m_errno = EHOSTUNREACH;
-        return -1;
-    } else if (result < 0 || msg == nullptr) {
-        m_errno = EBADE;
+    // m_errno ustawiane przez metodę send_and_wait.
+    if (send_and_wait(cmsg, msg) < 0) {
         return -1;
     }
 

@@ -29,14 +29,14 @@ class NFSConnection
                           const std::string &username,
                           const std::string &password,
                           const std::string &filesystemName);
-    int           open(char *path, int oflag, int mode);        // FIXME use helper method send_and_wait
-    int           close(int fd);                                // FIXME use helper method send_and_wait
-    ssize_t       read(int fd, void *buf, size_t count);        // FIXME use helper method send_and_wait
-    ssize_t       write(int fd, const void *buf, size_t count); // FIXME use helper method send_and_wait
-    off_t         lseek(int fd, off_t offset, int whence);      // FIXME use helper method send_and_wait
-    int           fstat(int fd, struct stat *statbyf);          // TODO fstat
-    int           unlink(const char *path);                     // TODO unlink
-    int           flock(int fd, int operation);                 // TODO flock
+    int           open(char *path, int oflag, int mode);
+    int           close(int fd);
+    ssize_t       read(int fd, void *buf, size_t count);
+    ssize_t       write(int fd, const void *buf, size_t count);
+    off_t         lseek(int fd, off_t offset, int whence);
+    int           fstat(int fd, struct stat *statbyf); // TODO fstat
+    int           unlink(const char *path);            // TODO unlink
+    int           flock(int fd, int operation);        // TODO flock
     int64_t       get_error();
 
   private:
