@@ -31,11 +31,11 @@ int main(int argc, char **argv) {
         std::cout << rmsg->data;
 
     } else if (argv[1] == std::string("--server")) {
-        nfs::listen_for_connections([](int sockfd) {
+        nfs::listen_for_connections([](int sockfd) -> int {
             const char         *data = "Hello Client!\n";
             uint64_t            size = strlen(data) + 1;
             nfs::SMSGResultRead msg(0, size, data);
-            nfs::send_message(sockfd, msg);
+            return nfs::send_message(sockfd, msg);
         });
 
     } else {
