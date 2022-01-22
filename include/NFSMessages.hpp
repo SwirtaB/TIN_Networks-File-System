@@ -53,11 +53,6 @@ struct MSG
     virtual void push_to_buffer(MessageBuffer &buffer) { buffer.push_uint8_t(code); }
 };
 
-struct CMSGConnectStart : MSG
-{
-    CMSGConnectStart() : MSG(MSGCode::CONNECT_START) {}
-};
-
 struct CMSGConnectInfoUsername : MSG
 {
   private:
@@ -401,7 +396,7 @@ struct SMSGResultRead : MSG
     char    *data;
 
     SMSGResultRead(int64_t errno_, uint64_t data_size_, const char *data_) :
-        MSG(MSGCode::RESULT_READ), _data(data_, data_ + data_size_), _errno(errno_), data_size(data_size_),
+        MSG(MSGCode::RESULT_READ), _data(data_, data_ + (data_size_ <= 0 ? data_size_ : 0)), _errno(errno_), data_size(data_size_),
         data(_data.data()) {}
 
     void push_to_buffer(MessageBuffer &buffer) override {

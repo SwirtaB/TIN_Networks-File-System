@@ -14,12 +14,9 @@ NFSConnection::NFSConnection() : m_access(false), m_sockfd(-1), m_errno(0) {}
 
 NFSConnection::~NFSConnection() {
     if (m_sockfd >= 0) {
-        // TODO: czy próba retransmisji wiadomości disconnect to dobry pomysł?
         nfs::CMSGDisconnect msg;
-        int                 repeat = 3;
-        while (nfs::send_message(m_sockfd, msg) <= 0 || repeat != 0) {
-            --repeat;
-        }
+        nfs::send_message(m_sockfd, msg);
+        nfs::disconnect_from_server(m_sockfd);
     }
 }
 
@@ -51,7 +48,7 @@ int NFSConnection::open(char *path, int oflag, int mode) {
     }
 
     std::unique_ptr<nfs::MSG> msg(nullptr);
-    nfs::CMSGRequestOpen      cmsg(oflag, mode, std::strlen(path), path);
+    nfs::CMSGRequestOpen      cmsg(oflag, mode, std::strlen(path) + 1, path);
 
     // m_errno ustawiane przez metodę send_and_wait.
     if (send_and_wait(cmsg, msg) < 0) {
@@ -62,7 +59,7 @@ int NFSConnection::open(char *path, int oflag, int mode) {
     // Obsługa błędu rzutowania - spodziewano się innej wiadomości
     nfs::SMSGResultOpen *rmsg = dynamic_cast<nfs::SMSGResultOpen *>(msg.get());
     if (rmsg == nullptr) {
-        m_errno = EBADE;
+        m_errno = EBADMSG;
         return -1;
     }
 
@@ -95,7 +92,7 @@ int NFSConnection::close(int fd) {
     // Obsługa błędu rzutowania - spodziewano się innej wiadomości.
     nfs::SMSGResultClose *rmsg = dynamic_cast<nfs::SMSGResultClose *>(msg.get());
     if (rmsg == nullptr) {
-        m_errno = EBADE;
+        m_errno = EBADMSG;
         return -1;
     }
 
@@ -127,12 +124,12 @@ ssize_t NFSConnection::read(int fd, void *buf, size_t count) {
     // Obsługa błędu rzutowania - spodziewano się innej wiadomości.
     nfs::SMSGResultRead *rmsg = dynamic_cast<nfs::SMSGResultRead *>(msg.get());
     if (rmsg == nullptr) {
-        m_errno = EBADE;
+        m_errno = EBADMSG;
         return -1;
     }
 
     // Sprawdzenie czy nie wystąpił błąd.
-    if (rmsg->_errno != 0) {
+    if (rmsg->data_size < 0) {
         m_errno = rmsg->_errno;
         return -1;
     }
@@ -161,12 +158,12 @@ ssize_t NFSConnection::write(int fd, const void *buf, size_t count) {
     // Obsługa błędu rzutowania - spodziewano się innej wiadomości.
     nfs::SMSGResultWrite *rmsg = dynamic_cast<nfs::SMSGResultWrite *>(msg.get());
     if (rmsg == nullptr) {
-        m_errno = EBADE;
+        m_errno = EBADMSG;
         return -1;
     }
 
     // Sprawdzenie czy nie wystąpił błąd.
-    if (rmsg->_errno != 0) {
+    if (rmsg->result < 0) {
         m_errno = rmsg->_errno;
         return -1;
     }
@@ -193,12 +190,12 @@ off_t NFSConnection::lseek(int fd, off_t offset, int whence) {
     // Obsługa błędu rzutowania - spodziewano się innej wiadomości.
     nfs::SMSGResultLseek *rmsg = dynamic_cast<nfs::SMSGResultLseek *>(msg.get());
     if (rmsg == nullptr) {
-        m_errno = EBADE;
+        m_errno = EBADMSG;
         return (off_t)-1;
     }
 
     // Sprawdzenie czy nie wystąpił błąd.
-    if (rmsg->_errno != 0) {
+    if (rmsg->offset < 0) {
         m_errno = rmsg->_errno;
         return (off_t)-1;
     }
@@ -225,7 +222,7 @@ int NFSConnection::fstat(int fd, struct stat *statbuf) {
     // Obsługa błędu rzutowania - spodziewano się innej wiadomości.
     nfs::SMSGResultFstat *rmsg = dynamic_cast<nfs::SMSGResultFstat *>(msg.get());
     if (rmsg == nullptr) {
-        m_errno = EBADE;
+        m_errno = EBADMSG;
         return -1;
     }
 
@@ -247,7 +244,7 @@ int NFSConnection::unlink(const char *path) {
     }
 
     std::unique_ptr<nfs::MSG> msg(nullptr);
-    nfs::CMSGRequestUnlink    cmsg(std::strlen(path), path);
+    nfs::CMSGRequestUnlink    cmsg(std::strlen(path) + 1, path);
 
     // m_errno ustawiane przez metodę send_and_wait.
     if (send_and_wait(cmsg, msg) < 0) {
@@ -256,7 +253,7 @@ int NFSConnection::unlink(const char *path) {
 
     nfs::SMSGResultUnlink *rmsg = dynamic_cast<nfs::SMSGResultUnlink *>(msg.get());
     if (rmsg == nullptr) {
-        m_errno = EBADE;
+        m_errno = EBADMSG;
         return -1;
     }
 
@@ -287,7 +284,7 @@ int NFSConnection::flock(int fd, int operation) {
 
     nfs::SMSGResultFlock *rmsg = dynamic_cast<nfs::SMSGResultFlock *>(msg.get());
     if (rmsg == nullptr) {
-        m_errno = EBADE;
+        m_errno = EBADMSG;
         return -1;
     }
 
@@ -326,7 +323,7 @@ ConnectReturn NFSConnection::send_username(const std::string &username) {
     if (rmsg == nullptr)
         return nfs::INVALID_SERVER_REQUEST;
 
-    nfs::CMSGConnectInfoUsername cmsg(username.size(), username.c_str());
+    nfs::CMSGConnectInfoUsername cmsg(username.size() + 1, username.c_str());
     if (nfs::send_message(m_sockfd, cmsg) < username.size())
         return nfs::TCP_ERROR;
 
@@ -344,7 +341,7 @@ ConnectReturn NFSConnection::send_password(const std::string &password) {
     if (rmsg == nullptr)
         return nfs::INVALID_SERVER_REQUEST;
 
-    nfs::CMSGConnectInfoUsername cmsg(password.size(), password.c_str());
+    nfs::CMSGConnectInfoPassword cmsg(password.size() + 1, password.c_str());
     if (nfs::send_message(m_sockfd, cmsg) < password.size())
         return nfs::TCP_ERROR;
 
@@ -362,7 +359,7 @@ ConnectReturn NFSConnection::access_filesystem(const std::string filesystemName)
     if (rmsg == nullptr)
         return nfs::INVALID_SERVER_REQUEST;
 
-    nfs::CMSGConnectInfoUsername cmsg(filesystemName.size(), filesystemName.c_str());
+    nfs::CMSGConnectInfoFSName cmsg(filesystemName.size() + 1, filesystemName.c_str());
     if (nfs::send_message(m_sockfd, cmsg) < filesystemName.size())
         return nfs::TCP_ERROR;
 
@@ -392,7 +389,7 @@ int NFSConnection::send_and_wait(nfs::MSG &clientMessage, std::unique_ptr<MSG> &
         m_errno = EHOSTUNREACH;
         return -1;
     } else if (result < 0 || resultMessage_ptr == nullptr) {
-        m_errno = EBADE;
+        m_errno = EBADMSG;
         return -1;
     }
 
