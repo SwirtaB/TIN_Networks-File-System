@@ -11,18 +11,21 @@ class NFSServerWorker
 {
   public:
     NFSServerWorker(NFSServerConfig config_, int client_socket_);
+    ~NFSServerWorker();
 
     int run();
 
   private:
     NFSServerConfig config;
     int             client_socket;
-    int             next_descriptor = 1;
-    std::string     filesystem_prefix;
-    int             userid;
     bool            authenticated = false;
+    int             userid;
+    std::string     username;
+    std::string     fsname;
+    std::string     filesystem_prefix;
 
     std::unordered_map<int, int> descriptor_map;
+    int                          next_descriptor = 1;
 
     int authenitcate_user();
     int request_username(std::unique_ptr<CMSGConnectInfoUsername> &msg);
@@ -38,7 +41,6 @@ class NFSServerWorker
     int handle_request_fstat(CMSGRequestFstat &msg);
     int handle_request_unlink(CMSGRequestUnlink &msg);
     int handle_request_flock(CMSGRequestFlock &msg);
-    int handle_disconnect();
 
     int  add_descriptor_to_map(int file_descriptor);
     bool is_descriptor_in_map(int client_descriptor);

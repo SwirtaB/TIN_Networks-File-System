@@ -28,14 +28,13 @@ Przyjmujemy następujące założenia:
 - Klient może zestawić wiele niezależnych połaczeń z serwerem
 - Serwer wykonuje operacje na plikach wykorzystując funkcje systemowe
 - Serwer autoryzuje użytkownika za pomocą mechanizmu użytkowników systemowych
-- W ramach implementacji może nastąpić ograniczenie maksymalnej ilości zapisanych/odczytanych danych, jednak pozostanie to przezroczyte dla użytkownika
+- Implementacja nakłada ograniczenie na maksymalny rozmiar pliku wynikający z możliwość zaalokowania bufora o maksymalnym rozmiarze int64. W praktyce jest to ~8EB co jest połową teoretycznego maksymalnego rozmiaru pliku na maszynie 64bit.
 </p>
 
 ## Opis funkcjonalny
 ### Ujęcie ogólne  
 Klientowi zostają udostępnione poniższe funkcjonalności:
 - możliwość połączenia się ze zdalnym systemem plików
-- odczyt informacji o zdalnym systemie plików (tj. ilość plików, całkowity rozmiar)
 - dokonywanie standardowych operacji plikowych:
     - odczyt pliku
     - zapis pliku
@@ -47,6 +46,10 @@ __Biblioteka kliencka__
 Biblioteka udostępnia programiście klasę NFSConnection, do stworzenia której programista musi podać nazwę użytkownika i hasło na systemie serwera oraz nazwę wybranego systemu plików udostępnianego przez serwer. Obiekt tej klasy enkapsuluje w swojej implementacji nawiązanie połączenia z serwerem, autoryzację użytkownika oraz wybranie systemu plików, i udostępnia następujące metody:
 </p>
 
+- `ConnectReturn connect(const std::string &hostName,
+                         const std::string &username,
+                         const std::string &password,
+                         const std::string &filesystemName)`
 - `int open(char *path, int oflag, int mode)`
 - `int close(int fd)`
 - `ssize_t read(int fd, void *buf, size_t count)`
@@ -57,7 +60,7 @@ Biblioteka udostępnia programiście klasę NFSConnection, do stworzenia której
 - `int flock(int fd, int operation)`
 
 <p align="justify">
-Metody te wysyłają do serwera rządania wykoniania danych operacji za pomocą podanego deskryptora. NFSConnection nie przechowuje żadnych informacji poza utrzymywaniem połączenia z serwerem. Użytkownik biblioteki klienckiej zarządza otrzymanym od serwera deskryptorem pliku i za jego pomocą wykonuje na otwartych plikach operacje.
+Metody te wysyłają do serwera rządania wykoniania danych operacji za pomocą podanego logicznego deskryptora. NFSConnection nie przechowuje żadnych informacji poza utrzymywaniem połączenia z serwerem (przydzielone gniazdo) i kodem błędów. Użytkownik biblioteki klienckiej zarządza otrzymanym od serwera deskryptorem pliku i za jego pomocą wykonuje na otwartych plikach operacje.
 </p>
 
 __Serwer__  
@@ -279,13 +282,13 @@ Pierwszy bajt każdego rodzaju komunikatu jest nagłówkiem identyfikującym jed
 `SMSGProvidePassword -> CMSGConnectInfo`  
 `SMSGProvideFSName -> CMSGConnectInfo`  
   
-Na pozostałe komunikaty nie spodziewamy się odpowiedzi. Pojawienie się komunikatu MSGUnexpectedError oznacza otrzymanie przez jedną ze stron komunikatu którego się ona nie spodziewała, i oznacza natychmiastowe zamknięcie połączenia.
+Na pozostałe komunikaty nie spodziewamy się odpowiedzi. W przypadku otrzymania przez klienta błędnej odpowiedzi od serwera, dana funkcja kończy się z błędem, sesja protokołu zostaje utrzymana. Interfejs biblioteki klienckiej pozwala na tylko poprawną komunikację z serwerem.
 
 ## Analiza protokołu
 
 Wybraliśmy protokół TCP ponieważ:
 - połączenie ma charakter sesyjny/konwersacyjny, z serwerem udostępniającym usługę
-- zapewnia dostarczenia wszystkich przesyłanych danych
+- zapewnia dostarczenie wszystkich przesyłanych danych
 - ułatwia przesyłanie dużych ciągów danych (istotne z punktu widzenia przesyłania plików)
 - zapewnia abstrakcje strumieniowości przesyłanych danych
 
@@ -298,7 +301,7 @@ Operacje plikowe są wykonywane po stronie serwera, bez ingerencji protokołu. N
 Główną wadą tego rozwiązania jest przesyłanie żywym tekstem hasła przez niezabezpieczone połączenie. Tak samo problemem jest przesyłanie niezaszyfrowanych danych odczytywanych/zapisywanych do plików na serwerze. Moglibyśmy rozwiązać te problemy zestawiając między klientem a serwerem zaszyfrowane połączenie TLS, w taki sam sposób jak robi to SSH.
 </p>
 
-## Planowany podział na moduły
+## Podział na moduły
 
 * NFSConnection - moduł realizujący bibliotekę kliencą. Realizuje logikę połączenia i komunikacji z serwerem za pomocą modułu NFSCommunication.
 
@@ -310,12 +313,41 @@ Główną wadą tego rozwiązania jest przesyłanie żywym tekstem hasła przez 
 
 * Aplikacja kliencka - programy pokazujące działanie biblioteki z wykorzystaniem NFSConnection.
 
-
 ## Szczegóły implementacji i używane biblioteki
-Język implementacji: C++17  
-Narzędzie budowania: CMake  
-Formater kodu: clang-format - format własny
+Język implementacji: __C++17__  
+Kompilator: __clang 13__  
+Narzędzie budowania: __CMake__  
+Formater kodu: __clang-format__ - format własny
 
 Użyte biblioteki:
 - XDR
 - systemowa biblioteka sockets
+
+## Budowanie projektu
+<!-- TODO -->
+
+## Opis interfejsu użytkownika
+<!-- TODO -->
+
+## Kluczowe rozwiązania
+<p align="justify">
+Protokuł zaprojektowaliśmy tak, by możliwie wiele funkcji było wykonywanych przez system na którym pracuje serwer, w większości opakowuje funkcje systemowe tak by były one poprawnie przesłane przez sieć. W efekcie protokół jest stosunkowo lekki, funkcje udostępniane użytkownikowi biblioteki zachowują interfejs implementacji w systemie Linux. 
+
+Klasa NFSConnection w wygodny sposób dokonuje abstrakcji sesji protokołu, dając dostęp do niezależnego logowania, wykonywania operacji i pobierania informacji o błędach. Pozwala to na korzystanie z wielu oddzielnych sesji w ramach jednego pragramu korzystającego z naszej bilioteki.
+
+</p>
+
+### Autoryzacja z wykorzystaniem systemowego mechanizmu użytkowników
+
+### Protokół jako sieciowy wrapper funkcji systemowych
+
+### Analiza zagrożeń
+
+## Serwer
+<!-- TODO -->
+### Implementacja
+
+### Kofiguracja
+
+## Testowanie
+<!-- TODO -->

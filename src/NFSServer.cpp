@@ -1,3 +1,4 @@
+#include "../include/Logging.hpp"
 #include "../include/NFSServerWorker.hpp"
 
 #include <filesystem>
@@ -24,19 +25,17 @@ int NFSServer::run() {
     nfs::listen_for_connections(
         [&](int sockfd) {
             int res = NFSServerWorker(config, sockfd).run();
-            if (res != 0) {
-                std::cerr << "server worker failed with " << res << " and errno " << errno << std::endl;
-            }
+            log_cerr("Server worker finished with code ", res);
             return res;
         },
         config.port);
-    perror("listening for connections returned");
+    log_cerr("Server shutting down");
     return -1;
 }
 
 int NFSServer::ensure_running_as_root() {
     if (geteuid() != 0) {
-        std::cerr << "Not running as root!" << std::endl;
+        log_cerr("Not running as root!");
         return 1;
     }
     return 0;
@@ -46,7 +45,7 @@ int NFSServer::load_config() {
     std::ifstream config_file(config_path);
 
     if (!(config_file)) {
-        std::cerr << "No config found at " << config_path << std::endl;
+        log_cerr("No config found at ");
         return 1;
     }
 
@@ -55,10 +54,10 @@ int NFSServer::load_config() {
         if (option == "port") {
             int64_t port;
             if (!(config_file >> port)) {
-                std::cerr << "Error parsing config option: port" << std::endl;
+                log_cerr("Error parsing config option: port");
                 return 1;
             } else if (port < 0 || port >= 65536) {
-                std::cerr << "Error parsing config option port: out of range" << std::endl;
+                log_cerr("Error parsing config option port: out of range");
                 return 1;
             } else {
                 config.port = static_cast<uint16_t>(port);
@@ -67,26 +66,26 @@ int NFSServer::load_config() {
             std::string name;
             std::string path;
             if (!(config_file >> name)) {
-                std::cerr << "Error parsing name of filesystem" << std::endl;
+                log_cerr("Error parsing name of filesystem");
                 return 1;
             } else if (!(config_file >> path)) {
-                std::cerr << "Error parsing path of filesystem with name " << name << std::endl;
+                log_cerr("Error parsing path of filesystem with name ", name);
                 return 1;
             } else if (!std::filesystem::is_directory(path)) {
-                std::cerr << "Filesystem " << name << " does not point to directory" << std::endl;
+                log_cerr("Filesystem ", name, " does not point to directory");
                 return 1;
             } else {
                 config.filesystems[name] = path;
-                std::cerr << "Loaded filesystem " << name << " at " << path << std::endl;
+                log_cerr("Loaded filesystem ", name, " at ", path);
             }
         } else {
-            std::cerr << "Invalid config option: " << option << std::endl;
+            log_cerr("Invalid config option: ", option);
             return 1;
         }
     }
 
     if (config.filesystems.empty()) {
-        std::cerr << "No filesystems in config" << std::endl;
+        log_cerr("No filesystems in config");
         return 1;
     }
 
