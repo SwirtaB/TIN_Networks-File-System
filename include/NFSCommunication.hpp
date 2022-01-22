@@ -3,6 +3,7 @@
 #include "NFSMessages.hpp"
 
 #include <memory>
+#include <functional>
 
 namespace nfs
 {

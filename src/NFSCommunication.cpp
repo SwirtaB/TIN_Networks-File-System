@@ -1,5 +1,7 @@
 #include "../include/NFSCommunication.hpp"
 
+#include <functional>
+
 extern "C"
 {
 #include <netdb.h>

@@ -2,12 +2,14 @@
 
 #include <filesystem>
 #include <iostream>
+#include <optional>
 
 extern "C"
 {
 #include <pwd.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/file.h>
 }
 
 namespace nfs
