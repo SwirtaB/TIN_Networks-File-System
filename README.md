@@ -331,17 +331,36 @@ Użyte biblioteki:
 
 ## Kluczowe rozwiązania
 <p align="justify">
-Protokuł zaprojektowaliśmy tak, by możliwie wiele funkcji było wykonywanych przez system na którym pracuje serwer, w większości opakowuje funkcje systemowe tak by były one poprawnie przesłane przez sieć. W efekcie protokół jest stosunkowo lekki, funkcje udostępniane użytkownikowi biblioteki zachowują interfejs implementacji w systemie Linux. 
+Protokuł zaprojektowaliśmy tak, by możliwie wiele funkcji było wykonywanych przez system na którym pracuje serwer, w większości opakowuje funkcje systemowe tak by były one poprawnie przesłane przez sieć.  
+</p>
 
+<p align="justify">
 Klasa NFSConnection w wygodny sposób dokonuje abstrakcji sesji protokołu, dając dostęp do niezależnego logowania, wykonywania operacji i pobierania informacji o błędach. Pozwala to na korzystanie z wielu oddzielnych sesji w ramach jednego pragramu korzystającego z naszej bilioteki.
+</p>
 
+<p align="justify">
+Serwer w celu autoryzacji i egezkwowania poziomów dostępu korzysta z mechanizmu użytkowników systemowych, wymaga to by był on uruchomiony z prawami root'a. Funkcje systemowe na plikach są wykonywane z prawami użytkownika którego reprezentuje klient, za pomocą funkcji systemowej `seteuid()`, co sprawia, że poziom dostępu jest silnie wspierany przez mechanizmy systemowe.
 </p>
 
 ### Autoryzacja z wykorzystaniem systemowego mechanizmu użytkowników
+Wykorzystanie tego sposobu autoryzacji wpisuje się w nasze podejście by skorzystać z możliwie wielu sprawdzonych mechanizmów, co do których działania nie mamy żadnych wątpliwości. Użytkownicy systemowi pozwalają na:
+- Proste zarządzanie użytkownikami i ich prawami przez administrację serwera
+- Zapewnienie poprawnej autoryzacji użytkoników
+- Natywne wsparcie systemowych poziomów dostępów, w tym grup użytkowników
+- Bezpieczne przechowywanie danych autoryzujacych użytkoników
 
-### Protokół jako sieciowy wrapper funkcji systemowych
+### Protokół jako *"sieciowy wrapper"* funkcji systemowych
+Ograniczenie logiki protokołu do minimum pozwoliło na wytworzenie lekkiego rozwiązania. Interfejs funkcji, ich zachowanie i wartości zwracane są identyczne ze standardową implementacją w systemach Linux, co ułatwia korzystanie z naszej biblioteki. Sprawia to też, że zachowanie protokołu jest nieskomplikowane, a on sam powinnien działać stabilnie.
 
 ### Analiza zagrożeń
+W proponowanym protokole i implementacji dostrzegamy trzy główne zagrożenia:
+
+#### Brak szyfrowanych połączeń
+
+
+#### Model zaufania klient-serwer
+
+#### Serwer uruchomiony z prawami root'a
 
 ## Serwer
 <!-- TODO -->
