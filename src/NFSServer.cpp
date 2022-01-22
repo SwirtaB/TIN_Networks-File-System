@@ -13,6 +13,9 @@ extern "C"
 namespace nfs
 {
 
+NFSServer::NFSServer(std::string config_path_)
+    : config_path(config_path_) {}
+
 int NFSServer::run() {
     if (ensure_running_as_root() != 0) return 1;
     if (load_config() != 0) return 1;
@@ -34,10 +37,10 @@ int NFSServer::ensure_running_as_root() {
 }
 
 int NFSServer::load_config() {
-    std::ifstream config_file("/etc/tinnfs.conf");
+    std::ifstream config_file(config_path);
 
     if (!(config_file)) {
-        std::cerr << "No config found at /etc/tinnfs.conf" << std::endl;
+        std::cerr << "No config found at " << config_path << std::endl;
         return 1;
     }
 

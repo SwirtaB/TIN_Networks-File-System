@@ -17,9 +17,11 @@ struct NFSServerConfig {
 class NFSServer
 {
 public:
+    NFSServer(std::string config_path_ = "/etc/tinnfs.conf");
     int run();
 
 private:
+    std::string config_path;
     NFSServerConfig config;
 
     int ensure_running_as_root();
