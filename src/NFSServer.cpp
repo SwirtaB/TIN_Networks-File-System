@@ -21,7 +21,13 @@ int NFSServer::run() {
     if (load_config() != 0) return 1;
 
     nfs::listen_for_connections(
-        [&](int sockfd) { return NFSServerWorker(config, sockfd).run(); },
+        [&](int sockfd) {
+            int res = NFSServerWorker(config, sockfd).run();
+            if (res != 0) {
+                std::cerr << "server worker failed with " << res << " and errno " << errno << std::endl;
+            }
+            return res;
+        },
         config.port
     );
     perror("listening for connections returned");

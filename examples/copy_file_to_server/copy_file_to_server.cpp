@@ -55,6 +55,10 @@ int main(int argc, char **argv) {
     if (res < 0) {
         return -1;
     }
+    int res_close = connection.close(fd);
+    if (res_close < 0) {
+        return -1;
+    }
     std::cout << "Written " << res << " bytes" << std::endl;
     return 0;
 }

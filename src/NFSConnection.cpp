@@ -7,6 +7,8 @@
 #include <cstring>
 #include <string>
 
+#include <iostream>
+
 namespace nfs
 {
 
@@ -379,6 +381,9 @@ int NFSConnection::send_and_wait(nfs::MSG &clientMessage, std::unique_ptr<MSG> &
     int result = nfs::send_message(m_sockfd, clientMessage);
     if (result == 0) {
         m_errno = EHOSTUNREACH;
+        return -1;
+    } else if (result < 0) {
+        m_errno = EBADMSG;
         return -1;
     }
 

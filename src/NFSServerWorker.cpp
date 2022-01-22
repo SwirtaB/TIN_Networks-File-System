@@ -286,7 +286,7 @@ int NFSServerWorker::handle_request_read(CMSGRequestRead &msg) {
         errno_ = EBADF;
     }
 
-    SMSGResultRead response(errno_, res == 0 ? res : 0, buff);
+    SMSGResultRead response(errno_, res, buff);
     delete[] buff;
     int send_res = send_message(client_socket, response);
     if (send_res <= 0) {
