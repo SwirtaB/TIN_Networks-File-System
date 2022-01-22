@@ -38,14 +38,17 @@ int main(int argc, char **argv) {
 
     int fd = connection.open(argv[6], O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
     if (fd <= 0) {
+        perror("open");
         return -1;
     }
     int res = connection.write(fd, file.data(), file.size());
     if (res < 0) {
+        perror("write");
         return -1;
     }
     int res_close = connection.close(fd);
     if (res_close < 0) {
+        perror("close");
         return -1;
     }
     std::cout << "Written " << res << " bytes" << std::endl;

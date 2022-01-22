@@ -23,7 +23,12 @@ namespace nfs
 NFSServerWorker::NFSServerWorker(NFSServerConfig config_, int client_socket_) :
     config(config_), client_socket(client_socket_) {}
 
-NFSServerWorker::~NFSServerWorker() {}
+NFSServerWorker::~NFSServerWorker() {
+    for (auto mapping = descriptor_map.begin(); mapping != descriptor_map.end(); ++mapping) {
+        int res = close(mapping->second);
+        log_cerr("Closed leftover fd ", mapping->second, " with result ", res);
+    }
+}
 
 int NFSServerWorker::run() {
     int auth = authenitcate_user();
@@ -191,7 +196,7 @@ int NFSServerWorker::handle_requests() {
             return -1;
         }
 
-        log_cerr("Received request with code ", request->code);
+        log_cerr("Received request with code ", static_cast<int>(request->code));
 
         if (enter_user_mode(userid) != 0) {
             log_perror("Failed to enter user mode");
@@ -227,6 +232,7 @@ int NFSServerWorker::handle_requests() {
         CMSGDisconnect *disconnect = dynamic_cast<CMSGDisconnect *>(request.get());
         if (disconnect != nullptr) {
             exit_user_mode();
+            log_cerr("Server worker disconnecting ", username, " in ", fsname);
             return 0;
         }
 
@@ -266,7 +272,7 @@ int NFSServerWorker::handle_request_open(CMSGRequestOpen &msg) {
 }
 
 int NFSServerWorker::handle_request_close(CMSGRequestClose &msg) {
-    log_cerr("close for ", username, " in ", fsname, " for fd ", msg.fd);
+    log_cerr("close for ", username, " in ", fsname, " for cd ", msg.fd);
 
     int res;
     int errno_ = 0;
@@ -292,7 +298,7 @@ int NFSServerWorker::handle_request_close(CMSGRequestClose &msg) {
 }
 
 int NFSServerWorker::handle_request_read(CMSGRequestRead &msg) {
-    log_cerr("read for ", username, " in ", fsname, " for ", msg.fd);
+    log_cerr("read for ", username, " in ", fsname, " for cd ", msg.fd);
 
     int   res;
     int   errno_ = 0;
@@ -320,7 +326,7 @@ int NFSServerWorker::handle_request_read(CMSGRequestRead &msg) {
 }
 
 int NFSServerWorker::handle_request_write(CMSGRequestWrite &msg) {
-    log_cerr("write for ", username, " in ", fsname, " for fd ", msg.fd);
+    log_cerr("write for ", username, " in ", fsname, " for cd ", msg.fd);
 
     int res;
     int errno_ = 0;
@@ -346,7 +352,7 @@ int NFSServerWorker::handle_request_write(CMSGRequestWrite &msg) {
 }
 
 int NFSServerWorker::handle_request_lseek(CMSGRequestLseek &msg) {
-    log_cerr("lseek for ", username, " in ", fsname, " for fd ", msg.fd);
+    log_cerr("lseek for ", username, " in ", fsname, " for cd ", msg.fd);
 
     int res;
     int errno_ = 0;
@@ -372,7 +378,7 @@ int NFSServerWorker::handle_request_lseek(CMSGRequestLseek &msg) {
 }
 
 int NFSServerWorker::handle_request_fstat(CMSGRequestFstat &msg) {
-    log_cerr("fstat for ", username, " in ", fsname, " for fd ", msg.fd);
+    log_cerr("fstat for ", username, " in ", fsname, " for cd ", msg.fd);
 
     int         res;
     struct stat statbuf;
@@ -419,7 +425,7 @@ int NFSServerWorker::handle_request_unlink(CMSGRequestUnlink &msg) {
 }
 
 int NFSServerWorker::handle_request_flock(CMSGRequestFlock &msg) {
-    log_cerr("fstat for ", username, " in ", fsname, " for fd ", msg.fd);
+    log_cerr("fstat for ", username, " in ", fsname, " for cd ", msg.fd);
 
     int res;
     int errno_ = 0;
@@ -447,7 +453,7 @@ int NFSServerWorker::handle_request_flock(CMSGRequestFlock &msg) {
 int NFSServerWorker::add_descriptor_to_map(int file_descriptor) {
     int client_descriptor             = next_descriptor++;
     descriptor_map[client_descriptor] = file_descriptor;
-    log_cerr("generated client descriptor ", client_descriptor, " for ", file_descriptor);
+    log_cerr("generated cd ", client_descriptor, " for fd ", file_descriptor);
     return client_descriptor;
 }
 

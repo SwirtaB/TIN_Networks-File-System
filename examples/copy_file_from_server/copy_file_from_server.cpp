@@ -29,28 +29,33 @@ int main(int argc, char **argv) {
 
     int fd = connection.open(argv[5], O_RDONLY, 0);
     if (fd <= 0) {
+        perror("open");
         return 1;
     }
     // find file size with lseek
     auto fileSize = connection.lseek(fd, 0, SEEK_END);
     if (fileSize == (off_t)-1) {
+        perror("lseek end");
         return 1;
     }
     std::cout << "File size " << fileSize << " bytes" << std::endl;
     // lseek back to beginning
     auto seek_back = connection.lseek(fd, 0, SEEK_SET);
     if (seek_back == (off_t)-1) {
+        perror("lseek start");
         return 1;
     }
     // creat buffer for read data and read
     char *buffer = new char[fileSize];
     int   res    = connection.read(fd, buffer, fileSize);
     if (res < 0) {
+        perror("read");
         std::cerr << connection.get_error() << std::endl;
         return 1;
     }
     int res_close = connection.close(fd);
     if (res_close < 0) {
+        perror("close");
         return 1;
     }
     writeFile(argv[6], buffer, res);

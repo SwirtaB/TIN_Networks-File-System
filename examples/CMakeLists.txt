@@ -10,9 +10,6 @@ find_library(TINNFS tinnfs
 )
 
 # Add src folder for example and set example target name
-file(GLOB SEND_MESSAGE_SRC "./send_message/*.cpp" )
-set(SEND_MESSAGE_EXAMPLE send_message)
-
 file(GLOB NFS_SERVER_SRC "./nfs_server/*.cpp")
 set(NFS_SERVER_EXAMPLE nfs_server)
 
@@ -24,9 +21,6 @@ set(COPY_FILE_FROM_SERVER_EXAMPLE copy_file_from_server)
 
 # Add include folders
 include_directories(${CMAKE_HOME_DIRECTORY}/include)
-
-add_executable(${SEND_MESSAGE_EXAMPLE} ${SEND_MESSAGE_SRC})
-target_link_libraries(${SEND_MESSAGE_EXAMPLE} PRIVATE ${TINNFS})
 
 add_executable(${NFS_SERVER_EXAMPLE} ${NFS_SERVER_SRC})
 target_link_libraries(${NFS_SERVER_EXAMPLE} PRIVATE ${TINNFS})
