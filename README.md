@@ -91,11 +91,6 @@ Komunikacja między klientem a serwerem odbywa się poprzez krótkie, synchronic
 ### Struktury reprezentujące pojedyńcze komunikaty:
 Klienta:
 ```
-struct CMSGConnectStart {
-    uint8_t code; // CONNECT_START
-}
-```
-```
 struct CMSGConnectInfoUsername {
     uint8_t code; // CONNECT_INFO_USERNAME
     uint64_t username_size;
@@ -274,8 +269,9 @@ MSGUnexpectedError {
 Pierwszy bajt każdego rodzaju komunikatu jest nagłówkiem identyfikującym jednoznacznie typ odbieranego komunikatu.
 
 ### Spodziewane odpowiedzi na komunikaty
-`CMSGConnectStart -> SMSGProvideUsername | SMSGRejected`  
-`CMSGConnectInfo -> SMSGProvidePassword | SMSGProvideFSName | SMSGAuthorizationResult`  
+`CMSGConnectInfoUsername -> SMSGProvidePassword`
+`CMSGConnectInfoPassword -> SMSGProvideFSName | SMSGAuthorizationFailed`
+`CMSGConnectInfoFSName -> SMSGProvidePassword | SMSGAuthorizationFailed | SMSGAuthorizationOk`
 `CMSGRequestOpen -> SMSGResultOpen`  
 `CMSGRequestClose -> SMSGResultClose`  
 `CMSGRequestRead -> SMSGResultRead`  
