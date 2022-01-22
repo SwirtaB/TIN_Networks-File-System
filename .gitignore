@@ -13,3 +13,6 @@ bin/
 
 #lib output
 lib/
+
+#reports
+*.pdf

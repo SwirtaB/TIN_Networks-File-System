@@ -1,6 +1,7 @@
 #include <NFSConnection.hpp>
 
 #include <fstream>
+#include <sys/stat.h>
 #include <vector>
 #include <iostream>
 #include <iterator>
@@ -46,12 +47,16 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    int fd = connection.open(argv[6], O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+    int fd = connection.open(argv[6], O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
     if (fd <= 0) {
         return -1;
     }
     int res = connection.write(fd, file.data(), file.size());
     if (res < 0) {
+        return -1;
+    }
+    int res_close = connection.close(fd);
+    if (res_close < 0) {
         return -1;
     }
     std::cout << "Written " << res << " bytes" << std::endl;
