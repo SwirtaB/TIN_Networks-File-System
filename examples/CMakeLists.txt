@@ -10,6 +10,9 @@ find_library(TINNFS tinnfs
 )
 
 # Add src folder for example and set example target name
+file(GLOB USER_APP_SRC "./user_app/*.cpp" )
+set(USER_APP_EXAMPLE user_app)
+
 file(GLOB SEND_MESSAGE_SRC "./send_message/*.cpp" )
 set(SEND_MESSAGE_EXAMPLE send_message)
 
@@ -21,6 +24,9 @@ set(COPY_FILE_TO_SERVER_EXAMPLE copy_file_to_server)
 
 # Add include folders
 include_directories(${CMAKE_HOME_DIRECTORY}/include)
+
+add_executable(${USER_APP_EXAMPLE} ${USER_APP_SRC})
+target_link_libraries(${USER_APP_EXAMPLE} PRIVATE ${TINNFS})
 
 add_executable(${SEND_MESSAGE_EXAMPLE} ${SEND_MESSAGE_SRC})
 target_link_libraries(${SEND_MESSAGE_EXAMPLE} PRIVATE ${TINNFS})
