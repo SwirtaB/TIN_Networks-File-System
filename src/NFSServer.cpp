@@ -1,24 +1,25 @@
 #include "../include/NFSServerWorker.hpp"
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <filesystem>
 
 extern "C"
 {
-#include <unistd.h>
 #include <stdio.h>
+#include <unistd.h>
 }
 
 namespace nfs
 {
 
-NFSServer::NFSServer(std::string config_path_)
-    : config_path(config_path_) {}
+NFSServer::NFSServer(std::string config_path_) : config_path(config_path_) {}
 
 int NFSServer::run() {
-    if (ensure_running_as_root() != 0) return 1;
-    if (load_config() != 0) return 1;
+    if (ensure_running_as_root() != 0)
+        return 1;
+    if (load_config() != 0)
+        return 1;
 
     nfs::listen_for_connections(
         [&](int sockfd) {
@@ -28,8 +29,7 @@ int NFSServer::run() {
             }
             return res;
         },
-        config.port
-    );
+        config.port);
     perror("listening for connections returned");
     return -1;
 }

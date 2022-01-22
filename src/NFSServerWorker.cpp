@@ -7,19 +7,19 @@
 
 extern "C"
 {
-#include <pwd.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/file.h>
-#include <shadow.h>
 #include <crypt.h>
+#include <fcntl.h>
+#include <pwd.h>
+#include <shadow.h>
+#include <sys/file.h>
+#include <unistd.h>
 }
 
 namespace nfs
 {
 
-NFSServerWorker::NFSServerWorker(NFSServerConfig config_, int client_socket_)
-    : config(config_), client_socket(client_socket_) {}
+NFSServerWorker::NFSServerWorker(NFSServerConfig config_, int client_socket_) :
+    config(config_), client_socket(client_socket_) {}
 
 int NFSServerWorker::run() {
     int auth = authenitcate_user();
@@ -37,29 +37,26 @@ int NFSServerWorker::run() {
 int NFSServerWorker::authenitcate_user() {
 
     std::unique_ptr<CMSGConnectInfoUsername> username_info;
+
     int res_username = request_username(username_info);
     if (res_username != 0) {
         std::cerr << "Requesting username failed" << std::endl;
-        MSGUnexpectedError msg;
-        send_message(client_socket, msg);
         return res_username;
     }
 
     std::unique_ptr<CMSGConnectInfoPassword> password_info;
+
     int res_password = request_password(password_info);
     if (res_password != 0) {
         std::cerr << "Requesting password failed" << std::endl;
-        MSGUnexpectedError msg;
-        send_message(client_socket, msg);
         return res_password;
     }
 
     std::unique_ptr<CMSGConnectInfoFSName> fsname_info;
+
     int res_fsname = request_fsname(fsname_info);
     if (res_fsname != 0) {
         std::cerr << "Requesting fsname failed" << std::endl;
-        MSGUnexpectedError msg;
-        send_message(client_socket, msg);
         return res_fsname;
     }
 
@@ -91,20 +88,20 @@ int NFSServerWorker::authenitcate_user() {
 
 int NFSServerWorker::request_username(std::unique_ptr<CMSGConnectInfoUsername> &msg) {
     SMSGProvideUsername req_msg;
-    int res = send_message(client_socket, req_msg);
+    int                 res = send_message(client_socket, req_msg);
     if (res <= 0) {
         perror("Failed to send username request");
         return -1;
     }
 
     std::unique_ptr<MSG> response;
-    int res_res = wait_for_message(client_socket, response);
+    int                  res_res = wait_for_message(client_socket, response);
     if (res_res <= 0) {
         perror("Failed to receive username");
         return -1;
     }
 
-    CMSGConnectInfoUsername *username = dynamic_cast<CMSGConnectInfoUsername*>(response.get());
+    CMSGConnectInfoUsername *username = dynamic_cast<CMSGConnectInfoUsername *>(response.get());
     if (username == nullptr) {
         std::cerr << "Username message invalid" << std::endl;
         return EBADMSG;
@@ -112,28 +109,28 @@ int NFSServerWorker::request_username(std::unique_ptr<CMSGConnectInfoUsername> &
         std::cerr << "Username string invalid" << std::endl;
         return EBADMSG;
     }
-    
-    (void) response.release();
+
+    (void)response.release();
     msg.reset(username);
     return 0;
 }
 
 int NFSServerWorker::request_password(std::unique_ptr<CMSGConnectInfoPassword> &msg) {
     SMSGProvidePassword req_msg;
-    int res = send_message(client_socket, req_msg);
+    int                 res = send_message(client_socket, req_msg);
     if (res <= 0) {
         perror("Failed to send password request");
         return -1;
     }
 
     std::unique_ptr<MSG> response;
-    int res_res = wait_for_message(client_socket, response);
+    int                  res_res = wait_for_message(client_socket, response);
     if (res_res <= 0) {
         perror("Failed to receive password");
         return -1;
     }
 
-    CMSGConnectInfoPassword *password = dynamic_cast<CMSGConnectInfoPassword*>(response.get());
+    CMSGConnectInfoPassword *password = dynamic_cast<CMSGConnectInfoPassword *>(response.get());
     if (password == nullptr) {
         std::cerr << "Password message invalid" << std::endl;
         return EBADMSG;
@@ -141,28 +138,28 @@ int NFSServerWorker::request_password(std::unique_ptr<CMSGConnectInfoPassword> &
         std::cerr << "Password string invalid" << std::endl;
         return EBADMSG;
     }
-    
-    (void) response.release();
+
+    (void)response.release();
     msg.reset(password);
     return 0;
 }
 
 int NFSServerWorker::request_fsname(std::unique_ptr<CMSGConnectInfoFSName> &msg) {
     SMSGProvideFSName req_msg;
-    int res = send_message(client_socket, req_msg);
+    int               res = send_message(client_socket, req_msg);
     if (res <= 0) {
         perror("Failed to send FSName request");
         return -1;
     }
 
     std::unique_ptr<MSG> response;
-    int res_res = wait_for_message(client_socket, response);
+    int                  res_res = wait_for_message(client_socket, response);
     if (res_res <= 0) {
         perror("Failed to receive FSName");
         return -1;
     }
 
-    CMSGConnectInfoFSName *fsname = dynamic_cast<CMSGConnectInfoFSName*>(response.get());
+    CMSGConnectInfoFSName *fsname = dynamic_cast<CMSGConnectInfoFSName *>(response.get());
     if (fsname == nullptr) {
         std::cerr << "FSName message invalid" << std::endl;
         return EBADMSG;
@@ -170,8 +167,8 @@ int NFSServerWorker::request_fsname(std::unique_ptr<CMSGConnectInfoFSName> &msg)
         std::cerr << "FSName string invalid" << std::endl;
         return EBADMSG;
     }
-    
-    (void) response.release();
+
+    (void)response.release();
     msg.reset(fsname);
     return 0;
 }
@@ -179,7 +176,7 @@ int NFSServerWorker::request_fsname(std::unique_ptr<CMSGConnectInfoFSName> &msg)
 int NFSServerWorker::handle_requests() {
     while (true) {
         std::unique_ptr<MSG> request;
-        int request_res = wait_for_message(client_socket, request);
+        int                  request_res = wait_for_message(client_socket, request);
         if (request_res <= 0) {
             perror("Failed to receive request");
             return -1;
@@ -191,25 +188,34 @@ int NFSServerWorker::handle_requests() {
         };
 
         std::optional<int> result;
-        
-        CMSGRequestOpen *request_open = dynamic_cast<CMSGRequestOpen*>(request.get());
-        if (request_open != nullptr) result = handle_request_open(*request_open);
-        CMSGRequestClose *request_close = dynamic_cast<CMSGRequestClose*>(request.get());
-        if (request_close != nullptr) result = handle_request_close(*request_close);
-        CMSGRequestRead *request_read = dynamic_cast<CMSGRequestRead*>(request.get());
-        if (request_read != nullptr) result = handle_request_read(*request_read);
-        CMSGRequestWrite *request_write = dynamic_cast<CMSGRequestWrite*>(request.get());
-        if (request_write != nullptr) result = handle_request_write(*request_write);
-        CMSGRequestLseek *request_lseek = dynamic_cast<CMSGRequestLseek*>(request.get());
-        if (request_lseek != nullptr) result = handle_request_lseek(*request_lseek);
-        CMSGRequestFstat *request_fstat = dynamic_cast<CMSGRequestFstat*>(request.get());
-        if (request_fstat != nullptr) result = handle_request_fstat(*request_fstat);
-        CMSGRequestUnlink *request_unlink = dynamic_cast<CMSGRequestUnlink*>(request.get());
-        if (request_unlink != nullptr) result = handle_request_unlink(*request_unlink);
-        CMSGRequestFlock *request_flock = dynamic_cast<CMSGRequestFlock*>(request.get());
-        if (request_flock != nullptr) result = handle_request_flock(*request_flock);
-        CMSGDisconnect *disconnect = dynamic_cast<CMSGDisconnect*>(request.get());
-        if (disconnect != nullptr) return handle_disconnect();
+
+        CMSGRequestOpen *request_open = dynamic_cast<CMSGRequestOpen *>(request.get());
+        if (request_open != nullptr)
+            result = handle_request_open(*request_open);
+        CMSGRequestClose *request_close = dynamic_cast<CMSGRequestClose *>(request.get());
+        if (request_close != nullptr)
+            result = handle_request_close(*request_close);
+        CMSGRequestRead *request_read = dynamic_cast<CMSGRequestRead *>(request.get());
+        if (request_read != nullptr)
+            result = handle_request_read(*request_read);
+        CMSGRequestWrite *request_write = dynamic_cast<CMSGRequestWrite *>(request.get());
+        if (request_write != nullptr)
+            result = handle_request_write(*request_write);
+        CMSGRequestLseek *request_lseek = dynamic_cast<CMSGRequestLseek *>(request.get());
+        if (request_lseek != nullptr)
+            result = handle_request_lseek(*request_lseek);
+        CMSGRequestFstat *request_fstat = dynamic_cast<CMSGRequestFstat *>(request.get());
+        if (request_fstat != nullptr)
+            result = handle_request_fstat(*request_fstat);
+        CMSGRequestUnlink *request_unlink = dynamic_cast<CMSGRequestUnlink *>(request.get());
+        if (request_unlink != nullptr)
+            result = handle_request_unlink(*request_unlink);
+        CMSGRequestFlock *request_flock = dynamic_cast<CMSGRequestFlock *>(request.get());
+        if (request_flock != nullptr)
+            result = handle_request_flock(*request_flock);
+        CMSGDisconnect *disconnect = dynamic_cast<CMSGDisconnect *>(request.get());
+        if (disconnect != nullptr)
+            return handle_disconnect();
 
         if (exit_user_mode() != 0) {
             perror("Failed to exit user mode");
@@ -232,13 +238,10 @@ int NFSServerWorker::handle_request_open(CMSGRequestOpen &msg) {
         return -1;
     }
 
-    std::string path = get_path_in_filesystem(msg.path);
-    int fd = open(path.c_str(), msg.oflag, msg.mode);
-    SMSGResultOpen response(
-        fd > 0 ? add_descriptor_to_map(fd) : fd,
-        fd > 0 ? 0 : errno
-    );
-    int res = send_message(client_socket, response);
+    std::string    path = get_path_in_filesystem(msg.path);
+    int            fd   = open(path.c_str(), msg.oflag, msg.mode);
+    SMSGResultOpen response(fd > 0 ? add_descriptor_to_map(fd) : fd, fd > 0 ? 0 : errno);
+    int            res = send_message(client_socket, response);
     if (res <= 0) {
         perror("Failed to send open result");
         return -1;
@@ -257,12 +260,12 @@ int NFSServerWorker::handle_request_close(CMSGRequestClose &msg) {
             errno_ = errno;
         }
     } else {
-        res = -1;
+        res    = -1;
         errno_ = EBADF;
     }
 
     SMSGResultClose response(res, errno_);
-    int send_res = send_message(client_socket, response);
+    int             send_res = send_message(client_socket, response);
     if (send_res <= 0) {
         perror("Failed to send close result");
         return -1;
@@ -272,9 +275,9 @@ int NFSServerWorker::handle_request_close(CMSGRequestClose &msg) {
 }
 
 int NFSServerWorker::handle_request_read(CMSGRequestRead &msg) {
-    int res;
-    int errno_ = 0;
-    char *buff = new char[msg.size];
+    int   res;
+    int   errno_ = 0;
+    char *buff   = new char[msg.size];
 
     if (is_descriptor_in_map(msg.fd)) {
         res = read(get_descriptor_from_map(msg.fd), buff, msg.size);
@@ -282,7 +285,7 @@ int NFSServerWorker::handle_request_read(CMSGRequestRead &msg) {
             errno_ = errno;
         }
     } else {
-        res = -1;
+        res    = -1;
         errno_ = EBADF;
     }
 
@@ -307,12 +310,12 @@ int NFSServerWorker::handle_request_write(CMSGRequestWrite &msg) {
             errno_ = errno;
         }
     } else {
-        res = -1;
+        res    = -1;
         errno_ = EBADF;
     }
 
     SMSGResultWrite response(res, errno_);
-    int send_res = send_message(client_socket, response);
+    int             send_res = send_message(client_socket, response);
     if (send_res <= 0) {
         perror("Failed to send write result");
         return -1;
@@ -331,12 +334,12 @@ int NFSServerWorker::handle_request_lseek(CMSGRequestLseek &msg) {
             errno_ = errno;
         }
     } else {
-        res = -1;
+        res    = -1;
         errno_ = EBADF;
     }
 
     SMSGResultLseek response(res, errno_);
-    int send_res = send_message(client_socket, response);
+    int             send_res = send_message(client_socket, response);
     if (send_res <= 0) {
         perror("Failed to send lseek result");
         return -1;
@@ -346,9 +349,9 @@ int NFSServerWorker::handle_request_lseek(CMSGRequestLseek &msg) {
 }
 
 int NFSServerWorker::handle_request_fstat(CMSGRequestFstat &msg) {
-    int res;
+    int         res;
     struct stat statbuf;
-    int errno_ = 0;
+    int         errno_ = 0;
 
     if (is_descriptor_in_map(msg.fd)) {
         res = fstat(get_descriptor_from_map(msg.fd), &statbuf);
@@ -356,12 +359,12 @@ int NFSServerWorker::handle_request_fstat(CMSGRequestFstat &msg) {
             errno_ = errno;
         }
     } else {
-        res = -1;
+        res    = -1;
         errno_ = EBADF;
     }
 
     SMSGResultFstat response(res, errno_, statbuf);
-    int send_res = send_message(client_socket, response);
+    int             send_res = send_message(client_socket, response);
     if (send_res <= 0) {
         perror("Failed to send fstat result");
         return -1;
@@ -376,13 +379,10 @@ int NFSServerWorker::handle_request_unlink(CMSGRequestUnlink &msg) {
         return -1;
     }
 
-    std::string path = get_path_in_filesystem(msg.path);
-    int res = unlink(path.c_str());
-    SMSGResultOpen response(
-        res,
-        res == 0 ? 0 : errno
-    );
-    int send_res = send_message(client_socket, response);
+    std::string    path = get_path_in_filesystem(msg.path);
+    int            res  = unlink(path.c_str());
+    SMSGResultOpen response(res, res == 0 ? 0 : errno);
+    int            send_res = send_message(client_socket, response);
     if (send_res <= 0) {
         perror("Failed to send unlink result");
         return -1;
@@ -401,12 +401,12 @@ int NFSServerWorker::handle_request_flock(CMSGRequestFlock &msg) {
             errno_ = errno;
         }
     } else {
-        res = -1;
+        res    = -1;
         errno_ = EBADF;
     }
 
     SMSGResultFlock response(res, errno_);
-    int send_res = send_message(client_socket, response);
+    int             send_res = send_message(client_socket, response);
     if (send_res <= 0) {
         perror("Failed to send flock result");
         return -1;
@@ -423,7 +423,7 @@ int NFSServerWorker::handle_disconnect() {
 }
 
 int NFSServerWorker::add_descriptor_to_map(int file_descriptor) {
-    int client_descriptor = next_descriptor++;
+    int client_descriptor             = next_descriptor++;
     descriptor_map[client_descriptor] = file_descriptor;
     return client_descriptor;
 }
@@ -443,13 +443,17 @@ void NFSServerWorker::remove_descriptor_from_map(int client_descriptor) {
 bool NFSServerWorker::select_user(char *username, char *password) {
     struct passwd *user_info;
     user_info = getpwnam(username);
-    if (user_info == NULL) return false;
+    if (user_info == NULL)
+        return false;
     if (strcmp(user_info->pw_passwd, "x") != 0) {
-        if (strcmp(user_info->pw_passwd, crypt(password, user_info->pw_passwd)) != 0) return false;
+        if (strcmp(user_info->pw_passwd, crypt(password, user_info->pw_passwd)) != 0)
+            return false;
     } else {
         struct spwd *shadow_entry = getspnam(username);
-        if (shadow_entry == NULL) return false;
-        if (strcmp(shadow_entry->sp_pwdp, crypt(password, shadow_entry->sp_pwdp)) != 0) return false;
+        if (shadow_entry == NULL)
+            return false;
+        if (strcmp(shadow_entry->sp_pwdp, crypt(password, shadow_entry->sp_pwdp)) != 0)
+            return false;
     }
 
     userid = user_info->pw_uid;
@@ -457,7 +461,8 @@ bool NFSServerWorker::select_user(char *username, char *password) {
 }
 
 bool NFSServerWorker::select_filesystem(char *filesystem) {
-    if (config.filesystems.count(filesystem) == 0) return false;
+    if (config.filesystems.count(filesystem) == 0)
+        return false;
     filesystem_prefix = config.filesystems[filesystem];
     return true;
 }

@@ -51,7 +51,7 @@ int disconnect_from_server(int descriptor) {
     return close(descriptor);
 }
 
-int listen_for_connections(std::function<int (int)> worker_function, uint16_t port, int queue_limit) {
+int listen_for_connections(std::function<int(int)> worker_function, uint16_t port, int queue_limit) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         perror("listen_for_connections: Error opening socket");
@@ -71,7 +71,7 @@ int listen_for_connections(std::function<int (int)> worker_function, uint16_t po
 
     while (true) {
         if (listen(sock, queue_limit) == 0) {
-            int                client_sock = accept(sock, nullptr, nullptr);
+            int client_sock = accept(sock, nullptr, nullptr);
             if (client_sock < 0) {
                 perror("listen_for_connections: Error accepting connection");
                 return client_sock;
@@ -229,9 +229,6 @@ int wait_for_message(int descriptor, std::unique_ptr<MSG> &msg_ptr) {
             break;
         case MSGCode::RESULT_FLOCK:
             msg = SMSGResultFlock::from_buffer(msgbuff);
-            break;
-        case MSGCode::UNEXPECTED_ERROR:
-            msg = new MSGUnexpectedError;
             break;
         default:
             exit(123);

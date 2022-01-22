@@ -1,18 +1,16 @@
 #include <NFSConnection.hpp>
-
 #include <fstream>
-#include <sys/stat.h>
-#include <vector>
 #include <iostream>
 #include <iterator>
+#include <sys/stat.h>
+#include <vector>
 
 extern "C"
 {
 #include <fcntl.h>
 }
 
-std::vector<char> readFile(char* filename)
-{
+std::vector<char> readFile(char *filename) {
     std::ifstream file(filename, std::ios::binary);
     file.unsetf(std::ios::skipws);
     std::streampos fileSize;
@@ -21,11 +19,7 @@ std::vector<char> readFile(char* filename)
     file.seekg(0, std::ios::beg);
     std::vector<char> vec;
     vec.reserve(fileSize);
-    vec.insert(
-        vec.begin(),
-        std::istream_iterator<char>(file),
-        std::istream_iterator<char>()
-    );
+    vec.insert(vec.begin(), std::istream_iterator<char>(file), std::istream_iterator<char>());
     return vec;
 }
 
@@ -37,12 +31,7 @@ int main(int argc, char **argv) {
     auto file = readFile(argv[1]);
 
     nfs::NFSConnection connection;
-    auto conn = connection.connect(
-        argv[2],
-        argv[3],
-        argv[4],
-        argv[5]
-    );
+    auto               conn = connection.connect(argv[2], argv[3], argv[4], argv[5]);
     if (conn != nfs::OK) {
         return -1;
     }

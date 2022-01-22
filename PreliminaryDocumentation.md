@@ -1,4 +1,4 @@
-# TIN - NFS - Dokumentacja końcowa
+# TIN - NFS - Dokumentacja wstępna
 
 ## Skład zespołu
 * Świrta Bartosz - lider
@@ -6,7 +6,7 @@
 * Woźniak Szymon 
 * Hebda Jakub 
 
-Data przekazania dokumentacji wstępnej: --.--.----
+Data przekazania dokumentacji wstępnej: 03.12.2021
 
 ## Temat projektu
 <p align="justify">
@@ -257,6 +257,12 @@ struct SMSGResultFlock {
     uint8_t code; // RESULT_FLOCK
     int64_t result;
     int64_t errno;
+}
+```
+Wspólne:
+```
+MSGUnexpectedError {
+    uint8_t code;
 }
 ```
 

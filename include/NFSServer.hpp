@@ -2,26 +2,27 @@
 
 #include "NFSCommunication.hpp"
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 namespace nfs
 {
-struct NFSServerConfig {
+struct NFSServerConfig
+{
     std::unordered_map<std::string, std::string> filesystems;
-    uint16_t port = DEFAULT_PORT;
+    uint16_t                                     port = DEFAULT_PORT;
 
     NFSServerConfig() {}
 };
 
 class NFSServer
 {
-public:
+  public:
     NFSServer(std::string config_path_ = "/etc/tinnfs.conf");
     int run();
 
-private:
-    std::string config_path;
+  private:
+    std::string     config_path;
     NFSServerConfig config;
 
     int ensure_running_as_root();

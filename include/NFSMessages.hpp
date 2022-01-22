@@ -38,8 +38,6 @@ enum class MSGCode : uint8_t
     RESULT_FSTAT,
     RESULT_UNLINK,
     RESULT_FLOCK,
-    // common
-    UNEXPECTED_ERROR,
 };
 
 struct MSG
@@ -391,13 +389,13 @@ struct SMSGResultRead : MSG
     std::vector<char> _data;
 
   public:
-    int64_t  _errno;
+    int64_t _errno;
     int64_t data_size;
-    char    *data;
+    char   *data;
 
     SMSGResultRead(int64_t errno_, int64_t data_size_, const char *data_) :
-        MSG(MSGCode::RESULT_READ), _data(data_, data_ + (data_size_ >= 0 ? data_size_ : 0)), _errno(errno_), data_size(data_size_),
-        data(_data.data()) {}
+        MSG(MSGCode::RESULT_READ), _data(data_, data_ + (data_size_ >= 0 ? data_size_ : 0)), _errno(errno_),
+        data_size(data_size_), data(_data.data()) {}
 
     void push_to_buffer(MessageBuffer &buffer) override {
         MSG::push_to_buffer(buffer);
@@ -520,8 +518,4 @@ struct SMSGResultFlock : MSG
     }
 };
 
-struct MSGUnexpectedError : MSG
-{
-    MSGUnexpectedError() : MSG(MSGCode::UNEXPECTED_ERROR) {}
-};
 } // namespace nfs
