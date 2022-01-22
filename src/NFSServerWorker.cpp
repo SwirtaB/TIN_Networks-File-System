@@ -1,5 +1,6 @@
 #include "../include/NFSServerWorker.hpp"
 
+#include <cstring>
 #include <filesystem>
 #include <iostream>
 #include <optional>
@@ -10,6 +11,8 @@ extern "C"
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/file.h>
+#include <shadow.h>
+#include <crypt.h>
 }
 
 namespace nfs
@@ -20,7 +23,11 @@ NFSServerWorker::NFSServerWorker(NFSServerConfig config_, int client_socket_)
 
 int NFSServerWorker::run() {
     int auth = authenitcate_user();
-    if (authenticated) {
+    if (auth != 0) {
+        std::cerr << "Authentication for failed" << std::endl;
+        return auth;
+    }
+    if (!authenticated) {
         std::cerr << "Authorization for " << client_socket << " failed" << std::endl;
         return 0;
     }
@@ -56,11 +63,11 @@ int NFSServerWorker::authenitcate_user() {
         return res_fsname;
     }
 
-    int res_user = select_user(username_info->username, password_info->password);
+    bool res_user = select_user(username_info->username, password_info->password);
     if (!res_user) {
         std::cerr << "Failed to select user " << username_info->username << std::endl;
     }
-    int res_fs = select_filesystem(fsname_info->fsname);
+    bool res_fs = select_filesystem(fsname_info->fsname);
     if (!res_fs) {
         std::cerr << "Failed to select filesystem " << fsname_info->fsname << std::endl;
     }
@@ -106,7 +113,7 @@ int NFSServerWorker::request_username(std::unique_ptr<CMSGConnectInfoUsername> &
         return EBADMSG;
     }
     
-    response.release();
+    (void) response.release();
     msg.reset(username);
     return 0;
 }
@@ -135,7 +142,7 @@ int NFSServerWorker::request_password(std::unique_ptr<CMSGConnectInfoPassword> &
         return EBADMSG;
     }
     
-    response.release();
+    (void) response.release();
     msg.reset(password);
     return 0;
 }
@@ -164,7 +171,7 @@ int NFSServerWorker::request_fsname(std::unique_ptr<CMSGConnectInfoFSName> &msg)
         return EBADMSG;
     }
     
-    response.release();
+    (void) response.release();
     msg.reset(fsname);
     return 0;
 }
@@ -437,7 +444,14 @@ bool NFSServerWorker::select_user(char *username, char *password) {
     struct passwd *user_info;
     user_info = getpwnam(username);
     if (user_info == NULL) return false;
-    // TODO: validate password
+    if (strcmp(user_info->pw_passwd, "x") != 0) {
+        if (strcmp(user_info->pw_passwd, crypt(password, user_info->pw_passwd)) != 0) return false;
+    } else {
+        struct spwd *shadow_entry = getspnam(username);
+        if (shadow_entry == NULL) return false;
+        if (strcmp(shadow_entry->sp_pwdp, crypt(password, shadow_entry->sp_pwdp)) != 0) return false;
+    }
+
     userid = user_info->pw_uid;
     return true;
 }

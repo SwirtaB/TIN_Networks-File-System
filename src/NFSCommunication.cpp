@@ -71,9 +71,7 @@ int listen_for_connections(std::function<int (int)> worker_function, uint16_t po
 
     while (true) {
         if (listen(sock, queue_limit) == 0) {
-            struct sockaddr_in client_addr;
-            socklen_t          client_addr_len;
-            int                client_sock = accept(sock, (struct sockaddr *)&client_addr, &client_addr_len);
+            int                client_sock = accept(sock, nullptr, nullptr);
             if (client_sock < 0) {
                 perror("listen_for_connections: Error accepting connection");
                 return client_sock;

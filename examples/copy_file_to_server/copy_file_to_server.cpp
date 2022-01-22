@@ -1,6 +1,7 @@
 #include <NFSConnection.hpp>
 
 #include <fstream>
+#include <sys/stat.h>
 #include <vector>
 #include <iostream>
 #include <iterator>
@@ -46,7 +47,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    int fd = connection.open(argv[6], O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+    int fd = connection.open(argv[6], O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
     if (fd <= 0) {
         return -1;
     }
