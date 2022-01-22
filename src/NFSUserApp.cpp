@@ -26,10 +26,11 @@ namespace nfs
     {
         bool exit = false;
         bool connected = false;
-        while (!connected || !exit) {
-            showConnectionMenu();
+        while (!(connected || exit)) {
+            showMenu(true);
             stringVector command = parseCommand();
             OperantionCall operantionCall = getOperantionCall(command, true);
+            std::cout << "operationCall name = " << operantionCall.name << "\n";
             if (operantionCall.name == "connect") {
                 if (operantionCall.args.size() == operantionCall.argsValues.size()) {
                     ConnectReturn connectReturn = connection.connect(
@@ -54,7 +55,7 @@ namespace nfs
         }
 
         while (!exit && connected) {
-            showMenu();
+            showMenu(false);
             stringVector command = parseCommand();
             OperantionCall operantionCall = getOperantionCall(command, false);
             if (operantionCall.name == "exit") {
@@ -67,8 +68,9 @@ namespace nfs
     }
      void NFSUserApp::initOperations() 
     {
-        connectOperation.name = "connect";
-        connectOperation.args = {"hostName", "username", "password", "filesystemName"};
+        connectOperations.push_back({"connect", {"hostName", "username", "password", "filesystemName"}});
+        connectOperations.push_back({"exit", {}});
+
         operations.push_back({"open", {"path", "oflag", "mode"}});
         operations.push_back({"read", {"path"}});
         operations.push_back({"write", {"path"}});
@@ -87,20 +89,14 @@ namespace nfs
         }
         return args;
     }
-
-    void NFSUserApp::showConnectionMenu() 
-    {
-        std::system("clear");
-        std::cout << "Type operation number or name with args:\n\n1. connect <>\n2. exit\n\n";
-    }
     
-    
-    void NFSUserApp::showMenu() 
+    void NFSUserApp::showMenu(bool connectMenu) 
     {
         std::system("clear");
         int opId = 1;
         std::cout << "Type operation number or name with args:\n\n";
-        for (auto op: operations) {
+        std::vector<nfs::Operantion> availableOperations = connectMenu ? connectOperations : operations;
+        for (auto op: availableOperations) {
             std::cout << opId << ". " << op.name << " " << getArgsAsString(op) << "\n";
             opId++;
         }
@@ -115,9 +111,11 @@ namespace nfs
 
         size_t pos = 0;
         while ((pos = command.find(delimiter)) != std::string::npos) {
-            partsOfCommand.push_back(command.substr(0, pos));
+            std::string token = command.substr(0, pos);
+            partsOfCommand.push_back(token);
             command.erase(0, pos + delimiter.length());
         }
+        partsOfCommand.push_back(command);
 
         for (const auto &str : partsOfCommand) {
             std::cout << str << "\n";
@@ -137,23 +135,21 @@ namespace nfs
         if (command.size() <= 0) {
             return { "Invalid call" };
         }
+        std::vector<nfs::Operantion> availableOperations = allowConnect ? connectOperations : operations;
         Operantion op;
         std::string operationIdOrName = command[0];
         try {
-            int idx = std::stoi(operationIdOrName);
-            op = operations.at(idx);
+            int idx = std::stoi(operationIdOrName) - 1;
+            op = availableOperations.at(idx);
         } catch (const std::exception& ignore) {
             op.name = { "Invalid call" };
         }
         if (op.name == "Invalid call") {
-            for (auto operation: operations) {
+            for (auto operation: availableOperations) {
                 if (operation.name == operationIdOrName) {
                     op = operation;
                     break;
                 }
-            }
-            if (allowConnect) {
-
             }
             if (op.name == "Invalid call") {
                 return { "Invalid call" };

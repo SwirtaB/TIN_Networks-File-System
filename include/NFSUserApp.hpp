@@ -28,15 +28,14 @@ namespace nfs
         int run();
 
     private:
-        Operantion connectOperation;
+        std::vector<Operantion> connectOperations;
         std::vector<Operantion> operations;
 
         NFSConnection connection;
         int fd = -1;
 
         void initOperations();
-        void showConnectionMenu();
-        void showMenu();
+        void showMenu(bool connectMenu);
         stringVector parseCommand();
         std::string getCommand();
         OperantionCall getOperantionCall(stringVector command, bool allowConnect);
