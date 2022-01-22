@@ -96,22 +96,22 @@ Klienta:
 ```
 struct CMSGConnectInfoUsername {
     uint8_t code; // CONNECT_INFO_USERNAME
+    char username[];
     uint64_t username_size;
-    char *username;
 }
 ```
 ```
 struct CMSGConnectInfoPassword {
     uint8_t code; // CONNECT_INFO_PASSWORD
+    char password[];
     uint64_t password_size;
-    char *password;
 }
 ```
 ```
 struct CMSGConnectInfoFSName {
     uint8_t code; // CONNECT_INFO_FSNAME
+    char fsname[];
     uint64_t fsname_size;
-    char *fsname;
 }
 ```
 ```
@@ -119,8 +119,8 @@ struct CMSGRequestOpen {
     uint8_t code; // REQUEST_OPEN
     uint64_t oflag;
     uint64_t mode;
+    char path[];
     uint64_t path_size;
-    char *path;
 }
 ```
 ```
@@ -140,8 +140,8 @@ struct CMSGRequestRead{
 struct CMSGRequestWrite{
     uint8_t code; // REQUEST_WRITE
     int64_t fd;
+    char data[];
     uint64_t size;
-    char *data;
 }
 ```
 ```
@@ -161,8 +161,8 @@ struct CMSGRequestFstat{
 ```
 struct CMSGRequestUnlink{
     uint8_t code; // REQUEST_UNLINK
+    char path[];
     uint64_t path_size;
-    char *path;
 }
 ```
 ```
@@ -221,9 +221,9 @@ struct SMSGResultClose {
 ```
 struct SMSGResultRead {
     uint8_t code; // RESULT_READ
-    uint64_t size;
     int64_t errno;
-    char *data;
+    char data[];
+    uint64_t size;
 }
 ```
 ```
@@ -331,7 +331,7 @@ Użyte biblioteki:
 
 ## Kluczowe rozwiązania
 <p align="justify">
-Protokuł zaprojektowaliśmy tak, by możliwie wiele funkcji było wykonywanych przez system na którym pracuje serwer, w większości opakowuje funkcje systemowe tak by były one poprawnie przesłane przez sieć.  
+Protokół zaprojektowaliśmy tak, by możliwie wiele funkcji było wykonywanych przez system na którym pracuje serwer, w większości opakowuje funkcje systemowe tak by były one poprawnie przesłane przez sieć.  
 </p>
 
 <p align="justify">
