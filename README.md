@@ -363,10 +363,13 @@ W proponowanym protokole i implementacji dostrzegamy trzy główne zagrożenia:
 #### Serwer uruchomiony z prawami root'a
 
 ## Serwer
+Dostarczamy standardową implementację ... .
 <!-- TODO -->
 ### Implementacja
 
+
 ### Kofiguracja
+
 
 ## Testowanie
 <!-- TODO -->
