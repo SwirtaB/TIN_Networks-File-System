@@ -40,7 +40,7 @@ ConnectReturn NFSConnection::connect(const std::string &hostName,
     return nfs::OK;
 }
 
-int NFSConnection::open(char *path, int oflag, int mode) {
+int NFSConnection::open(const char *path, int oflag, int mode) {
     // Weryfikacja czy mamy zestawione połączenie i autoryzację.
     if (!m_access) {
         m_errno = EACCES;

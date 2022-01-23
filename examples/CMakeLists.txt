@@ -10,6 +10,9 @@ find_library(TINNFS tinnfs
 )
 
 # Add src folder for example and set example target name
+file(GLOB USER_APP_SRC "./user_app/*.cpp" )
+set(USER_APP_EXAMPLE user_app)
+
 file(GLOB NFS_SERVER_SRC "./nfs_server/*.cpp")
 set(NFS_SERVER_EXAMPLE nfs_server)
 
@@ -21,6 +24,9 @@ set(COPY_FILE_FROM_SERVER_EXAMPLE copy_file_from_server)
 
 # Add include folders
 include_directories(${CMAKE_HOME_DIRECTORY}/include)
+
+add_executable(${USER_APP_EXAMPLE} ${USER_APP_SRC})
+target_link_libraries(${USER_APP_EXAMPLE} PRIVATE ${TINNFS})
 
 add_executable(${NFS_SERVER_EXAMPLE} ${NFS_SERVER_SRC})
 target_link_libraries(${NFS_SERVER_EXAMPLE} PRIVATE ${TINNFS})
