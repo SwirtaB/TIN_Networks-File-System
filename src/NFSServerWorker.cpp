@@ -282,6 +282,7 @@ int NFSServerWorker::handle_request_close(CMSGRequestClose &msg) {
 
     if (is_descriptor_in_map(msg.fd)) {
         res = close(get_descriptor_from_map(msg.fd));
+        remove_descriptor_from_map(msg.fd);
         if (res < 0) {
             errno_ = errno;
         }

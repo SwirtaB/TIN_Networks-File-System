@@ -1,5 +1,6 @@
 #include "NFSUserApp.hpp"
 #include <fstream>
+#include <iostream>
 #include <iterator>
 
 extern "C"
@@ -47,10 +48,10 @@ namespace nfs
             if (operantionCall.name == "connect") {
                 if (operantionCall.args.size() == operantionCall.argsValues.size()) {
                     ConnectReturn connectReturn = connection.connect(
-                        command[0],
-                        command[1],
-                        command[2],
-                        command[3]
+                        operantionCall.argsValues[0],
+                        operantionCall.argsValues[1],
+                        operantionCall.argsValues[2],
+                        operantionCall.argsValues[3]
                     );
                     if (connectReturn == OK) {
                         connected = true;
@@ -181,9 +182,9 @@ namespace nfs
         std::cout << "st_size: " << statbuf->st_size << "\n";
         std::cout << "st_blksize: " << statbuf->st_blksize << "\n";
         std::cout << "st_blocks: " << statbuf->st_blocks << "\n";
-        std::cout << "st_atim: " << ctime((const time_t*) &(statbuf->st_atim)) << "\n";
-        std::cout << "st_mtime: " << ctime((const time_t*) &(statbuf->st_mtime)) << "\n";
-        std::cout << "st_ctime: " << ctime((const time_t*) &(statbuf->st_ctime)) << "\n";
+        std::cout << "st_atim: " << ctime((const time_t*) &(statbuf->st_atim));
+        std::cout << "st_mtime: " << ctime((const time_t*) &(statbuf->st_mtime));
+        std::cout << "st_ctime: " << ctime((const time_t*) &(statbuf->st_ctime));
         getchar();
     }
     
@@ -236,9 +237,9 @@ namespace nfs
             }
         }
         if (operantion.name == "fstat") {
-            struct stat *statbuf;
-            int result = connection.fstat(fd, statbuf);
-            showStats(statbuf);
+            struct stat statbuf;
+            int result = connection.fstat(fd, &statbuf);
+            if (result == 0) showStats(&statbuf);
             return result;
         }
         if (operantion.name == "flock") {
