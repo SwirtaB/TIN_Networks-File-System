@@ -9,12 +9,15 @@
 
 extern "C"
 {
-#include <crypt.h>
 #include <fcntl.h>
 #include <pwd.h>
-#include <shadow.h>
 #include <sys/file.h>
 #include <unistd.h>
+
+#ifdef __unix__
+#include <crypt.h>
+#include <shadow.h>
+#endif
 }
 
 namespace nfs
@@ -472,6 +475,7 @@ void NFSServerWorker::remove_descriptor_from_map(int client_descriptor) {
 bool NFSServerWorker::select_user(char *username, char *password) {
     struct passwd *user_info;
     user_info = getpwnam(username);
+#ifdef __unix__
     if (user_info == NULL)
         return false;
     if (strcmp(user_info->pw_passwd, "x") != 0) {
@@ -487,6 +491,11 @@ bool NFSServerWorker::select_user(char *username, char *password) {
 
     userid = user_info->pw_uid;
     return true;
+#endif
+#ifndef __unix__
+    log_cerr("User authentication only supported on __unix__");
+    return false;
+#endif
 }
 
 bool NFSServerWorker::select_filesystem(char *filesystem) {

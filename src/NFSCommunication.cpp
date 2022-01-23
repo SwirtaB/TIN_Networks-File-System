@@ -12,7 +12,7 @@ extern "C"
 #include <unistd.h>
 }
 
-#ifdef __linux__
+#ifdef __unix__
 #define htonll(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
 #define ntohll(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
 #endif

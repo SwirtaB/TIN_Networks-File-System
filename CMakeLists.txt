@@ -22,7 +22,9 @@ else()
     target_compile_options(${LIB_NAME} PRIVATE -Ofast)
 endif()
 
-target_link_libraries(${LIB_NAME} crypt)
+if (UNIX AND NOT APPLE)
+    target_link_libraries(${LIB_NAME} crypt)
+endif()
 
 set(BUILD_EXAMPLES True)
 if (BUILD_EXAMPLES)
