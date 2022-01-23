@@ -62,7 +62,7 @@ class NFSConnection
      * @param mode
      * @return int
      */
-    int open(char *path, int oflag, int mode);
+    int open(const char *path, int oflag, int mode);
 
     /**
      * @brief Wrapps standar close(2) function. Interface is the same.

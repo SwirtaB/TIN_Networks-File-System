@@ -40,6 +40,8 @@ namespace nfs
         std::string getCommand();
         OperantionCall getOperantionCall(stringVector command, bool allowConnect);
         int runOperantionCall(OperantionCall operantionCall);
+        int downloadFile(std::string filename, std::string target);
+        int sendFile(std::string filename, std::string target);
     };
 
 } // namespace nfs
