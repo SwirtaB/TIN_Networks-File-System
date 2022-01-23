@@ -357,7 +357,6 @@ W proponowanym protokole i implementacji dostrzegamy trzy główne zagrożenia:
 
 #### Brak szyfrowanych połączeń
 
-
 #### Model zaufania klient-serwer
 
 #### Serwer uruchomiony z prawami root'a
@@ -369,7 +368,19 @@ Dostarczamy standardową implementację ... .
 
 
 ### Kofiguracja
+Serwer do działania potrzebuje pliku konfiguracyjnego, definiującego udostępniane systemy plików.
+Podczas uruchamiania serwera można opcjonalnie podać ścieżkę do pliku z konfiguracją. W przeciwnym razie będzie on szukał pliku konfiguracyjnego pod ścieżką `/etc/tinnfs.conf`.
 
+W pliku konfiguracyjnym mogą znajdować się dwa rodzaje ustawień: 
+- `port <port>` - ustawienie portu na jakim serwer nasłuchuje na połączenia. Podanie portu w pliku konfiguracyjnym jest opcjonalne. Jeśli nie zostanie on podany, serwer użyje domyślnego portu - 46879.
+- `filesystem <name> <path>` - definicja systemu plików. Obowiązkowe jest podanie w pliku konfiguracyjnym przynajmniej jednego systemu plików.
+
+Przykładowy plik konfiguracyjny: 
+```
+port 12345
+filesystem share /opt/nfsshare
+filesystem root /
+```
 
 ## Testowanie
 <!-- TODO -->
