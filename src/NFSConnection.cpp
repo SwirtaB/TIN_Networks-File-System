@@ -368,7 +368,7 @@ ConnectReturn NFSConnection::access_filesystem(const std::string filesystemName)
         return nfs::SERVER_NOT_RESPONDING;
 
     nfs::SMSGAuthorizationOk *armsg = dynamic_cast<nfs::SMSGAuthorizationOk *>(msg.get());
-    if (rmsg == nullptr)
+    if (armsg == nullptr)
         return nfs::ACCESS_DENIED;
 
     return nfs::OK;
