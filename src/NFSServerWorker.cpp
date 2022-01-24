@@ -418,7 +418,7 @@ int NFSServerWorker::handle_request_unlink(CMSGRequestUnlink &msg) {
 
     std::string    path = get_path_in_filesystem(msg.path);
     int            res  = unlink(path.c_str());
-    SMSGResultOpen response(res, res == 0 ? 0 : errno);
+    SMSGResultUnlink response(res, res == 0 ? 0 : errno);
     int            send_res = send_message(client_socket, response);
     if (send_res <= 0) {
         log_perror("Failed to send unlink result");

@@ -13,6 +13,9 @@ find_library(TINNFS tinnfs
 file(GLOB USER_APP_SRC "./user_app/*.cpp" )
 set(USER_APP_EXAMPLE user_app)
 
+file(GLOB ACCEPTANCE_TEST_SRC "./acceptance_test/*.cpp" )
+set(ACCEPTANCE_TEST_EXAMPLE acceptance_test)
+
 file(GLOB NFS_SERVER_SRC "./nfs_server/*.cpp")
 set(NFS_SERVER_EXAMPLE nfs_server)
 
@@ -27,6 +30,9 @@ include_directories(${CMAKE_HOME_DIRECTORY}/include)
 
 add_executable(${USER_APP_EXAMPLE} ${USER_APP_SRC})
 target_link_libraries(${USER_APP_EXAMPLE} PRIVATE ${TINNFS})
+
+add_executable(${ACCEPTANCE_TEST_EXAMPLE} ${ACCEPTANCE_TEST_SRC})
+target_link_libraries(${ACCEPTANCE_TEST_EXAMPLE} PRIVATE ${TINNFS} pthread)
 
 add_executable(${NFS_SERVER_EXAMPLE} ${NFS_SERVER_SRC})
 target_link_libraries(${NFS_SERVER_EXAMPLE} PRIVATE ${TINNFS})

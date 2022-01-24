@@ -1,4 +1,5 @@
 #include "../include/NFSCommunication.hpp"
+#include "../include/Logging.hpp"
 
 #include <functional>
 
@@ -23,7 +24,7 @@ namespace nfs
 int connect_to_server(const char *hostname, uint16_t port) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
-        perror("connect_to_server: Error opening socket");
+        log_perror("connect_to_server: Error opening socket");
         return sock;
     }
 
@@ -33,14 +34,14 @@ int connect_to_server(const char *hostname, uint16_t port) {
 
     struct hostent *server_hostent = gethostbyname(hostname);
     if (server_hostent == 0) {
-        perror("connect_to_server: Error getting host by name");
+        log_perror("connect_to_server: Error getting host by name");
         return -1;
     }
     memcpy(&server_addr.sin_addr, server_hostent->h_addr, server_hostent->h_length);
 
     int connect_res = connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
     if (connect_res < 0) {
-        perror("connect_to_server: Error connecting to server");
+        log_perror("connect_to_server: Error connecting to server");
         return connect_res;
     }
 
@@ -54,8 +55,14 @@ int disconnect_from_server(int descriptor) {
 int listen_for_connections(std::function<int(int)> worker_function, uint16_t port, int queue_limit) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
-        perror("listen_for_connections: Error opening socket");
+        log_perror("listen_for_connections: Error opening socket");
         return sock;
+    }
+    int enable = 1;
+    int set_reuseaddr = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
+    if (set_reuseaddr < 0) {
+        log_perror("listen_for_connections: Failed to set SO_REUSEADDR");
+        return set_reuseaddr;
     }
 
     struct sockaddr_in server_addr;
@@ -65,7 +72,7 @@ int listen_for_connections(std::function<int(int)> worker_function, uint16_t por
 
     int bind_res = bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
     if (bind_res < 0) {
-        perror("listen_for_connections: Error binding");
+        log_perror("listen_for_connections: Error binding");
         return bind_res;
     }
 
@@ -73,7 +80,7 @@ int listen_for_connections(std::function<int(int)> worker_function, uint16_t por
         if (listen(sock, queue_limit) == 0) {
             int client_sock = accept(sock, nullptr, nullptr);
             if (client_sock < 0) {
-                perror("listen_for_connections: Error accepting connection");
+                log_perror("listen_for_connections: Error accepting connection");
                 return client_sock;
             };
 

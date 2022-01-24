@@ -45,7 +45,7 @@ int NFSServer::load_config() {
     std::ifstream config_file(config_path);
 
     if (!(config_file)) {
-        log_cerr("No config found at ");
+        log_cerr("No config found at ", config_path);
         return 1;
     }
 

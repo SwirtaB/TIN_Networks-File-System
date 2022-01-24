@@ -432,3 +432,14 @@ reprezentujących zdalne systemy plików. W połączeniu z implementacją serwer
 <p align="justify">
 Poprawność działania systemu próbujemy weryfikować testem akceptacyjnym. Test polega na uruchomieniu serwera w określonym stanie startowym z dostępem użytkownika testowego. Następnie uruchamiane są klienty testowe, które wykonują na serwerze określone operacje i sprawdzają, czy efekt ich działania jest taki jak spodziewany. Jeżeli nie zostaną wykryte odstępstwa zakładamy, że implementacja działa poprawnie.
 </p>
+
+### Etapy testu:
+- tworzenie losowego pliku, zapisanie go na serwerze, odczytanie go z serwera i porównanie ze stworzonym
+- wykonanie lseek na koniec zapisanego pliku, sprawdzenie czy przesunął się o rozmiar stworzonego pliku
+- pobranie fstat stworzonego pliku z serwera i porównanie z wynikiem fstat wykonanego lokalnie na tym samym pliku
+- otwarcie testowego folderu w celu pobrania fstat, porównanie z wynikiem fstat wykonanego lokalnie na tym samym folderze
+- unlink na stworzonym losowym pliku i lokalne sprawdzenie czy został usunięty
+- otwarcie pliku przez dwóch klientów jednocześnie i sprawdzenie, że flock pozwala na zsynchronizowanie zapisów tak, aby zapis drugiego klienta wykonał się po drugim, sztucznie opóźnionym zapisie pierwszego
+
+### Wyniki testu:
+Test pozwolił nam na znalezienie błędu w implementacji unlink po stronie serwera, który wysyłał w odpowiedzi komunikat z kodem odpowiedzi na inną operację.
