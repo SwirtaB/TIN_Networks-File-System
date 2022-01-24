@@ -263,12 +263,12 @@ struct SMSGResultFlock {
 }
 ```
 
-Pierwszy bajt każdego rodzaju komunikatu jest nagłówkiem identyfikującym jednoznacznie typ odbieranego komunikatu.
+Przed komuniatem przesyłany jest integer 64-bitowy zawierający rozmiar przesyłanego dalej komunikatu. Pierwszy bajt każdego rodzaju komunikatu jest nagłówkiem identyfikującym jednoznacznie typ odbieranego komunikatu.
 
 ### Spodziewane odpowiedzi na komunikaty
 `CMSGConnectInfoUsername -> SMSGProvidePassword`
 `CMSGConnectInfoPassword -> SMSGProvideFSName | SMSGAuthorizationFailed`
-`CMSGConnectInfoFSName -> SMSGProvidePassword | SMSGAuthorizationFailed | SMSGAuthorizationOk`
+`CMSGConnectInfoFSName -> SMSGProvidePassword | SMSGAuthorizationFailed | SMSGAuthorizationOk`  
 `CMSGRequestOpen -> SMSGResultOpen`  
 `CMSGRequestClose -> SMSGResultClose`  
 `CMSGRequestRead -> SMSGResultRead`  
@@ -320,8 +320,8 @@ Narzędzie budowania: __CMake__
 Formater kodu: __clang-format__ - format własny
 
 Użyte biblioteki:
-- XDR
-- systemowa biblioteka sockets
+- systemowa biblioteka sockets do połączeń TCP
+- libcrypt oraz linuxowe shadow.h do weryfikacji hasła użytkownika klienta
 
 ## Budowanie projektu
 Projekt składa się dwóch części: biblioteki implementującej protokół i serwer, oraz przykładowych programów w tym aplikacji klienckiej.
@@ -347,17 +347,20 @@ cmake --build ./cmake-build
 Programy wykonywalne zostną zbudowane w folderze **bin**.
 
 
-## Opis interfejsu użytkownika
+## Opis interfejsu użytkownika aplikacji klienckiej
 <!-- TODO -->
 
 ## Serwer
-Dostarczamy standardową implementację ... .
-<!-- TODO -->
 ### Implementacja
+<p align="justify">
+Uruchomiony serwer w pierwszej kolejności weryfikuje czy został uruchomiony z prawami root'a. Jeśli nie, kończy pracę z błędem. Następnie serwer wczytuje plik konfiguracyjny, zgodnie z opisem poniżej. Po wczytaniu konfiguracji serwer zaczyna nasłuchiwać na przychodzące połączenia TCP na ustawionym porcie, i dla każdego połączenia tworzy oddzielny proces obsługujący połączenie z klientem.
+Proces obsługujący połączenie autoryzuje klienta i rozpoczyna proces realizacji rządań klienta. Przechowuje deskryptory otwartych plików i realizuje lokanie systemowe odpowiedniki funkcji klienckich. Przed wykonaniem każdej operacji woła <b>seteuid(uid)</b> ustawiając swoje efektywne id na id użytkownika w imieniu którego wykonuje operację. Po rozłączeniu z klientem zamyka wszystkie pliki pozostawione jako otwarte przez klienta.
+</p>
 
 ### Kofiguracja
-Serwer do działania potrzebuje pliku konfiguracyjnego, definiującego udostępniane systemy plików.
-Podczas uruchamiania serwera można opcjonalnie podać ścieżkę do pliku z konfiguracją. W przeciwnym razie będzie on szukał pliku konfiguracyjnego pod ścieżką `/etc/tinnfs.conf`.
+<p align="justify">
+Serwer do działania potrzebuje pliku konfiguracyjnego, definiującego udostępniane systemy plików. Podczas uruchamiania serwera można opcjonalnie podać ścieżkę do pliku z konfiguracją. W przeciwnym razie będzie on szukał pliku konfiguracyjnego pod ścieżką <b>/etc/tinnfs.conf</b>.
+</p>
 
 W pliku konfiguracyjnym mogą znajdować się dwa rodzaje ustawień: 
 - `port <port>` - ustawienie portu na jakim serwer nasłuchuje na połączenia. Podanie portu w pliku konfiguracyjnym jest opcjonalne. Jeśli nie zostanie on podany, serwer użyje domyślnego portu - 46879.
@@ -394,11 +397,11 @@ Wykorzystanie tego sposobu autoryzacji wpisuje się w nasze podejście by skorzy
 Ograniczenie logiki protokołu do minimum pozwoliło na wytworzenie lekkiego rozwiązania. Interfejs funkcji, ich zachowanie i wartości zwracane są identyczne ze standardową implementacją w systemach Linux, co ułatwia korzystanie z naszej biblioteki. Sprawia to też, że zachowanie protokołu jest nieskomplikowane i przewidywalne, a on sam powinnien działać stabilnie.
 
 ## Analiza zagrożeń
-W proponowanym protokole i implementacji dostrzegamy trzy główne zagrożenia:
+W proponowanym protokole i implementacji dostrzegamy cztery główne zagrożenia:
 
 ### Brak szyfrowanych połączeń
 <p align="justify">
-Wszystkie wiadomości przekazywane w protokole nie są w żaden sposób szyfrowane, co sprawia, że są podatne na podsłuchanie. Jest to poważna luka, jednakże implementacja poprawnego szyfrowania wbudowanego w protokół nie jest prosta i wykracza znacznie poza zakres projektu. Można ją wyeliminować wykorzystując mechanizm IPSecm, lub dostarczając zewnętrzne szyfrowanie, tj. dokonać tunelowania naszego protokołu w ramach zaszyfrowanego połączenia realizowanego przez inne narzędzie. Oba proponowane rozwiązania eliminują problem i nie wpływają na działanie naszego protokołu.
+Wszystkie wiadomości przekazywane w protokole nie są w żaden sposób szyfrowane, co sprawia, że są podatne na ataki typu man in the middle. Jest to poważna luka, jednakże implementacja poprawnego szyfrowania wbudowanego w protokół nie jest prosta i wykracza znacznie poza zakres projektu. Można ją wyeliminować wykorzystując mechanizm IPsec, lub dostarczając zewnętrzne szyfrowanie, tj. dokonać tunelowania naszego protokołu w ramach zaszyfrowanego połączenia realizowanego przez inne narzędzie. Oba proponowane rozwiązania eliminują problem i nie wpływają na działanie naszego protokołu.
 </p>
 
 ### Model zaufania klient-serwer
@@ -406,16 +409,26 @@ Protokół zakłada bardzo prosty, wręcz naiwny model zaufania.
 
 __Po stronie serwera__:
  * każdy klient, który zna jego adres jest zaufany i protokół może działać 
- * Późniejsza autoryzacja mówi jedynie serwerowi czy klient faktycznie ma dostęp do żadanych zasobów
+ * późniejsza autoryzacja mówi jedynie serwerowi czy klient faktycznie ma dostęp do żądanych zasobów
  * nie da się stwierdzić, czy maszyna z której komunikuje się klient jest zaufana, czy może jest to osoba niepowołana, która weszła w posiadanie danych uwierzytelniających
 
 __Po stronie klienta__:
- * brak możliwości weryfikacji czy serwer do którego się łączymy jest tym do którego chcemy się połaczyć - ataki typu men in the middle.
+ * brak możliwości weryfikacji czy serwer do którego się łączymy jest tym do którego chcemy się połaczyć, a nie jest innym serwerem podszywającym się pod niego.
 
 Powyższe problemy są możliwe do wyeliminowania z użyciem zewnętrznego mechanizmu. Dostarczenie rozwiązań proponowanych w [punkcie wyżej](#Brak-szyfrowanych-połączeń) pozwoli na skorzystanie z wielu mechanizmów uwierzytelniania obu stron.
 
 ### Serwer uruchomiony z prawami root'a
+<p align="justify">
+Serwer, aby mógł wykonywać operację w imieniu dowolnego użytkownika systemu na którym się znajduje, wymaga bycia uruchomionym z prawami root'a. Wszystkie operacje jednak są wykonywane jako użytkownik, który je wywołuje poprzez użycie mechanizmu `seteuid`. Zakładając więc brak błędów w programie pozwalających pominąć wywołanie `seteuid` oraz poprawne i bezpieczne działanie mechanizmu autoryzacji, nie wprowadza to do systemu żadnych zagrożeń poza tym, na co pozwalają uprawnienia danego użytkownika systemowego.
+</p>
 
+### Konieczność poprawnej konfiguracji systemu
+<p align="justify">
+Protokół nie gwarantuje bezpośrednio ograniczenia dostępu klientów jedynie do wydzielonego folderu, w którym serwer realizuje zdalny system plików. By ograniczyć dostęp konieczna jest odpowiednia konfiguracja systemu na którym uruchomiony jest serwer, a konkretnie przyznanie użytkownikom dostępu jedynie do folderów
+reprezentujących zdalne systemy plików. W połączeniu z implementacją serwera opartą o mechanizm <b>seteuid</b> daje to gwarancję, że klient nie wyjdzie poza dostępny mu obszar.
+</p>
 
 ## Testowanie
-<!-- TODO -->
+<p align="justify">
+Poprawność działania systemu próbujemy weryfikować testem akceptacyjnym. Test polega na uruchomieniu serwera w określonym stanie startowym z dostępem użytkownika testowego. Następnie uruchamiane są klienty testowe, które wykonują na serwerze określone operacje i sprawdzają, czy efekt ich działania jest taki jak spodziewany. Jeżeli nie zostaną wykryte odstępstwa zakładamy, że implementacja działa poprawnie.
+</p>
