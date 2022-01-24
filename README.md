@@ -324,10 +324,51 @@ Użyte biblioteki:
 - systemowa biblioteka sockets
 
 ## Budowanie projektu
-<!-- TODO -->
+Projekt składa się dwóch części: biblioteki implementującej protokół i serwer, oraz przykładowych programów w tym aplikacji klienckiej.
+
+W celu zbudowania biblioteki należy wywołać w terminalu:
+```
+mkdir cmake-build
+cd cmake-build
+cmake ..
+cmake --build . --target tinnfs
+cd ..
+```
+Biblioteka zostanie zbudowana w folderze **lib** jako biblioteka współdzielona *.so*.
+
+W celu zbudowania przykładów należy ustawić flagę **BUILD_EXAMPLES** w **CMakeLists.txt** na wartość **True**.
+```
+set(BUILD_EXAMPLES True)
+```
+Następnie wywołać w terminalu:
+```
+cmake --build ./cmake-build
+```
+Programy wykonywalne zostną zbudowane w folderze **bin**.
+
 
 ## Opis interfejsu użytkownika
 <!-- TODO -->
+
+## Serwer
+Dostarczamy standardową implementację ... .
+<!-- TODO -->
+### Implementacja
+
+### Kofiguracja
+Serwer do działania potrzebuje pliku konfiguracyjnego, definiującego udostępniane systemy plików.
+Podczas uruchamiania serwera można opcjonalnie podać ścieżkę do pliku z konfiguracją. W przeciwnym razie będzie on szukał pliku konfiguracyjnego pod ścieżką `/etc/tinnfs.conf`.
+
+W pliku konfiguracyjnym mogą znajdować się dwa rodzaje ustawień: 
+- `port <port>` - ustawienie portu na jakim serwer nasłuchuje na połączenia. Podanie portu w pliku konfiguracyjnym jest opcjonalne. Jeśli nie zostanie on podany, serwer użyje domyślnego portu - 46879.
+- `filesystem <name> <path>` - definicja systemu plików. Obowiązkowe jest podanie w pliku konfiguracyjnym przynajmniej jednego systemu plików.
+
+Przykładowy plik konfiguracyjny: 
+```
+port 12345
+filesystem share /opt/nfsshare
+filesystem root /
+```
 
 ## Kluczowe rozwiązania
 <p align="justify">
@@ -344,43 +385,37 @@ Serwer w celu autoryzacji i egezkwowania poziomów dostępu korzysta z mechanizm
 
 ### Autoryzacja z wykorzystaniem systemowego mechanizmu użytkowników
 Wykorzystanie tego sposobu autoryzacji wpisuje się w nasze podejście by skorzystać z możliwie wielu sprawdzonych mechanizmów, co do których działania nie mamy żadnych wątpliwości. Użytkownicy systemowi pozwalają na:
-- Proste zarządzanie użytkownikami i ich prawami przez administrację serwera
+- Proste zarządzanie użytkownikami i ich prawami dostępu przez administrację serwera
 - Zapewnienie poprawnej autoryzacji użytkoników
 - Natywne wsparcie systemowych poziomów dostępów, w tym grup użytkowników
-- Bezpieczne przechowywanie danych autoryzujacych użytkoników
+- Bezpieczne przechowywanie danych autoryzujacych użytkowników
 
 ### Protokół jako *"sieciowy wrapper"* funkcji systemowych
-Ograniczenie logiki protokołu do minimum pozwoliło na wytworzenie lekkiego rozwiązania. Interfejs funkcji, ich zachowanie i wartości zwracane są identyczne ze standardową implementacją w systemach Linux, co ułatwia korzystanie z naszej biblioteki. Sprawia to też, że zachowanie protokołu jest nieskomplikowane, a on sam powinnien działać stabilnie.
+Ograniczenie logiki protokołu do minimum pozwoliło na wytworzenie lekkiego rozwiązania. Interfejs funkcji, ich zachowanie i wartości zwracane są identyczne ze standardową implementacją w systemach Linux, co ułatwia korzystanie z naszej biblioteki. Sprawia to też, że zachowanie protokołu jest nieskomplikowane i przewidywalne, a on sam powinnien działać stabilnie.
 
-### Analiza zagrożeń
+## Analiza zagrożeń
 W proponowanym protokole i implementacji dostrzegamy trzy główne zagrożenia:
 
-#### Brak szyfrowanych połączeń
+### Brak szyfrowanych połączeń
+<p align="justify">
+Wszystkie wiadomości przekazywane w protokole nie są w żaden sposób szyfrowane, co sprawia, że są podatne na podsłuchanie. Jest to poważna luka, jednakże implementacja poprawnego szyfrowania wbudowanego w protokół nie jest prosta i wykracza znacznie poza zakres projektu. Można ją wyeliminować wykorzystując mechanizm IPSecm, lub dostarczając zewnętrzne szyfrowanie, tj. dokonać tunelowania naszego protokołu w ramach zaszyfrowanego połączenia realizowanego przez inne narzędzie. Oba proponowane rozwiązania eliminują problem i nie wpływają na działanie naszego protokołu.
+</p>
 
-#### Model zaufania klient-serwer
+### Model zaufania klient-serwer
+Protokół zakłada bardzo prosty, wręcz naiwny model zaufania.  
 
-#### Serwer uruchomiony z prawami root'a
+__Po stronie serwera__:
+ * każdy klient, który zna jego adres jest zaufany i protokół może działać 
+ * Późniejsza autoryzacja mówi jedynie serwerowi czy klient faktycznie ma dostęp do żadanych zasobów
+ * nie da się stwierdzić, czy maszyna z której komunikuje się klient jest zaufana, czy może jest to osoba niepowołana, która weszła w posiadanie danych uwierzytelniających
 
-## Serwer
-Dostarczamy standardową implementację ... .
-<!-- TODO -->
-### Implementacja
+__Po stronie klienta__:
+ * brak możliwości weryfikacji czy serwer do którego się łączymy jest tym do którego chcemy się połaczyć - ataki typu men in the middle.
 
+Powyższe problemy są możliwe do wyeliminowania z użyciem zewnętrznego mechanizmu. Dostarczenie rozwiązań proponowanych w [punkcie wyżej](#Brak-szyfrowanych-połączeń) pozwoli na skorzystanie z wielu mechanizmów uwierzytelniania obu stron.
 
-### Kofiguracja
-Serwer do działania potrzebuje pliku konfiguracyjnego, definiującego udostępniane systemy plików.
-Podczas uruchamiania serwera można opcjonalnie podać ścieżkę do pliku z konfiguracją. W przeciwnym razie będzie on szukał pliku konfiguracyjnego pod ścieżką `/etc/tinnfs.conf`.
+### Serwer uruchomiony z prawami root'a
 
-W pliku konfiguracyjnym mogą znajdować się dwa rodzaje ustawień: 
-- `port <port>` - ustawienie portu na jakim serwer nasłuchuje na połączenia. Podanie portu w pliku konfiguracyjnym jest opcjonalne. Jeśli nie zostanie on podany, serwer użyje domyślnego portu - 46879.
-- `filesystem <name> <path>` - definicja systemu plików. Obowiązkowe jest podanie w pliku konfiguracyjnym przynajmniej jednego systemu plików.
-
-Przykładowy plik konfiguracyjny: 
-```
-port 12345
-filesystem share /opt/nfsshare
-filesystem root /
-```
 
 ## Testowanie
 <!-- TODO -->
