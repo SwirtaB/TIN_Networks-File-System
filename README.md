@@ -323,9 +323,14 @@ Użyte biblioteki:
 - systemowa biblioteka sockets do połączeń TCP
 - libcrypt oraz linuxowe shadow.h do weryfikacji hasła użytkownika klienta
 
-## Budowanie projektu
+## Zawartość repozytorium
 Projekt składa się dwóch części: biblioteki implementującej protokół i serwer, oraz przykładowych programów w tym aplikacji klienckiej.
 
+Część pierwsza znajduje się w folderach [include](./include) oraz [src](./src), zawierają one odpowiednio pliki nagłówkowe oraz pliki źródłowe.
+
+Druga część projektu znajduje się w folderze [examples](./examples). Znajduje się tam kilka prostych przykładów użycia biblioteki, przykładowa aplikacja kliencka oraz testy akceptacyjne.
+
+## Budowanie projektu
 W celu zbudowania biblioteki należy wywołać w terminalu:
 ```
 mkdir cmake-build
@@ -402,6 +407,8 @@ Menu główne pozwala użytkownikowi na wywołanie poniższych poleceń:
 <p align="justify">
 Uruchomiony serwer w pierwszej kolejności weryfikuje czy został uruchomiony z prawami root'a. Jeśli nie, kończy pracę z błędem. Następnie serwer wczytuje plik konfiguracyjny, zgodnie z opisem poniżej. Po wczytaniu konfiguracji serwer zaczyna nasłuchiwać na przychodzące połączenia TCP na ustawionym porcie, i dla każdego połączenia tworzy oddzielny proces obsługujący połączenie z klientem.
 Proces obsługujący połączenie autoryzuje klienta i rozpoczyna proces realizacji rządań klienta. Przechowuje deskryptory otwartych plików i realizuje lokanie systemowe odpowiedniki funkcji klienckich. Przed wykonaniem każdej operacji woła <b>seteuid(uid)</b> ustawiając swoje efektywne id na id użytkownika w imieniu którego wykonuje operację. Po rozłączeniu z klientem zamyka wszystkie pliki pozostawione jako otwarte przez klienta.
+
+Serwer korzysta z modułu [logger](./include/Logging.hpp), który na wyjście <b>stderr</b> wypisuje informacje o wykonywanych operacjach i błędach wraz ze znacznikiem czasowym. Taka implementacja loggera pozwala na proste przekierowanie jego wyników np. do pliku zgodnie z upodobaniem adnimistratora serwera.
 </p>
 
 ### Kofiguracja
