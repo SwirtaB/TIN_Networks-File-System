@@ -350,7 +350,7 @@ Programy wykonywalne zostną zbudowane w folderze **bin**.
 ## Opis interfejsu użytkownika aplikacji klienckiej
 ### Informacje ogólne
 <p align="justify">
-Aplikacja kliencka jest prostą aplikacją konsolową, która pozwala na wywoływanie poleceń udostępnianych przez serwer. Interfejs aplikacji został podzielony na dwa widoki. Pierwszy pozwala na zawieranie połączenia z serwerem (Menu do zawierania połaczenia). Drugi widok służy do wykonywania operacji na serwerze poprzez wywoływanie poleceń (Menu główne). Obydwa widoki wyświetlają listę dostępnych komend wraz z ich argumentami, a następnie czekają na polecenie od użytkownika.
+Aplikacja kliencka jest prostą aplikacją konsolową, która pozwala na wywoływanie poleceń udostępnianych przez protokół. Interfejs aplikacji został podzielony na dwa widoki. Pierwszy pozwala na zestawienie połączenia z serwerem (Menu do zestawiania połaczenia). Drugi widok służy do wykonywania operacji plikowych poprzez wywoływanie poleceń (Menu główne). Obydwa widoki wyświetlają listę dostępnych komend wraz z ich argumentami, a następnie czekają na polecenie od użytkownika.
 </p>
 
 #### Format poleceń wpisywanych przez użytkownika
@@ -363,7 +363,7 @@ identyfikator_polecenia  argument_1  argument_2  ...  argument_n
 ```
 
 ### Opis dostępnych widoków aplikacji
-#### Menu do zawierania połączenia
+#### Menu do zestawiania połączenia
 <p align="justify">
 Widok ten udostępnia użytkownikowi jedynie dwa polecenia:
 </p>
@@ -386,7 +386,7 @@ Menu główne pozwala użytkownikowi na wywołanie poniższych poleceń:
 - `open <path> <oflag> <mode>` - pozwala na otwarcie pliku/folderu znajdującego się na serwerze we wskazywanym przez ścieżkę (path) miejscu. Przy wywołaniu użytkownik musi również określić wartości liczbowe flagi (oflag) oraz trybu (mode). Polecenie tworzy deskryptor pliku, który jest wykorzystywany przez inne polecenia.
 - `download file <file> <target>` - pozwala na skopiowanie i pobranie pliku (file) z serwera, a następnie zapisanie go we wskazanym miejscu (target).
 - `send file <file> <target>` - pozwala na przesłanie na serwer pliku (file), a następnie zapisanie go we wskazanym miejscu (target) na serwerze.
-- `off_t lseek(int fd, off_t offset, int whence)` - służy do sprawdzenia aktualnej wartości offset dla pliku przypisanego do aktualnego deskryptora pliku.
+- `off_t lseek(int fd, off_t offset, int whence)` - służy do ustawienia wartości offset dla pliku przypisanego do aktualnego deskryptora pliku.
 - `int fstat(int fd, struct stat *statbuf)` - pozwala na wyświetlenie statystyk aktualnego deskryptora pliku.
 - `unlink <path>` - służy do usuwania wskazanego przez ścieżkę (path) pliku z serwera. 
 - `flock <operation>` - pozwala na wywołanie systemowej funkcji flock dla wybranej operacji (operation).
@@ -394,7 +394,7 @@ Menu główne pozwala użytkownikowi na wywołanie poniższych poleceń:
 - `exit ` - Kończy działanie programu.
 
 ##### Wygląd menu głównego
-![Main menu](https://github.com/SwirtaB/TIN_NFS/blob/main/reports/figures/user_app_2.png?raw=true "Main menu")
+![Main menu](./reports/figures/user_app_2.png "Main menu")
 
 
 ## Serwer
@@ -422,7 +422,7 @@ filesystem root /
 
 ## Kluczowe rozwiązania
 <p align="justify">
-Protokół zaprojektowaliśmy tak, by możliwie wiele funkcji było wykonywanych przez system na którym pracuje serwer, w większości opakowuje funkcje systemowe tak by były one poprawnie przesłane przez sieć.  
+Protokół zaprojektowaliśmy tak, by możliwie wiele funkcji było wykonywanych przez system na którym pracuje serwer, w większości opakowuje on funkcje systemowe tak by były one poprawnie przesłane przez sieć.  
 </p>
 
 <p align="justify">
@@ -430,7 +430,7 @@ Klasa NFSConnection w wygodny sposób dokonuje abstrakcji sesji protokołu, daj�
 </p>
 
 <p align="justify">
-Serwer w celu autoryzacji i egezkwowania poziomów dostępu korzysta z mechanizmu użytkowników systemowych, wymaga to by był on uruchomiony z prawami root'a. Funkcje systemowe na plikach są wykonywane z prawami użytkownika którego reprezentuje klient, za pomocą funkcji systemowej `seteuid()`, co sprawia, że poziom dostępu jest silnie wspierany przez mechanizmy systemowe.
+Serwer w celu autoryzacji i egezkwowania poziomów dostępu korzysta z mechanizmu użytkowników systemowych, wymaga to by był on uruchomiony z prawami root'a. Funkcje systemowe na plikach są wykonywane z prawami użytkownika którego reprezentuje klient, za pomocą funkcji systemowej <b>seteuid()</b>, co sprawia, że poziom dostępu jest silnie wspierany przez mechanizmy systemowe.
 </p>
 
 ### Autoryzacja z wykorzystaniem systemowego mechanizmu użytkowników
@@ -438,7 +438,7 @@ Wykorzystanie tego sposobu autoryzacji wpisuje się w nasze podejście by skorzy
 - Proste zarządzanie użytkownikami i ich prawami dostępu przez administrację serwera
 - Zapewnienie poprawnej autoryzacji użytkoników
 - Natywne wsparcie systemowych poziomów dostępów, w tym grup użytkowników
-- Bezpieczne przechowywanie danych autoryzujacych użytkowników
+- Bezpieczne przechowywanie danych autoryzujących użytkowników
 
 ### Protokół jako *"sieciowy wrapper"* funkcji systemowych
 Ograniczenie logiki protokołu do minimum pozwoliło na wytworzenie lekkiego rozwiązania. Interfejs funkcji, ich zachowanie i wartości zwracane są identyczne ze standardową implementacją w systemach Linux, co ułatwia korzystanie z naszej biblioteki. Sprawia to też, że zachowanie protokołu jest nieskomplikowane i przewidywalne, a on sam powinnien działać stabilnie.
@@ -466,7 +466,7 @@ Powyższe problemy są możliwe do wyeliminowania z użyciem zewnętrznego mecha
 
 ### Serwer uruchomiony z prawami root'a
 <p align="justify">
-Serwer, aby mógł wykonywać operację w imieniu dowolnego użytkownika systemu na którym się znajduje, wymaga bycia uruchomionym z prawami root'a. Wszystkie operacje jednak są wykonywane jako użytkownik, który je wywołuje poprzez użycie mechanizmu `seteuid`. Zakładając więc brak błędów w programie pozwalających pominąć wywołanie `seteuid` oraz poprawne i bezpieczne działanie mechanizmu autoryzacji, nie wprowadza to do systemu żadnych zagrożeń poza tym, na co pozwalają uprawnienia danego użytkownika systemowego.
+Serwer, aby mógł wykonywać operację w imieniu dowolnego użytkownika systemu na którym się znajduje, wymaga bycia uruchomionym z prawami root'a. Wszystkie operacje są jednak wykonywane jako użytkownik, który je wywołuje poprzez użycie mechanizmu <b>seteuid</b>. Zakładając więc brak błędów w programie pozwalających pominąć wywołanie <b>seteuid</b> oraz poprawne i bezpieczne działanie mechanizmu autoryzacji, nie wprowadza to do systemu żadnych zagrożeń poza tym, na co pozwalają uprawnienia danego użytkownika systemowego.
 </p>
 
 ### Konieczność poprawnej konfiguracji systemu
@@ -486,7 +486,10 @@ Poprawność działania systemu próbujemy weryfikować testem akceptacyjnym. Te
 - pobranie fstat stworzonego pliku z serwera i porównanie z wynikiem fstat wykonanego lokalnie na tym samym pliku
 - otwarcie testowego folderu w celu pobrania fstat, porównanie z wynikiem fstat wykonanego lokalnie na tym samym folderze
 - unlink na stworzonym losowym pliku i lokalne sprawdzenie czy został usunięty
-- otwarcie pliku przez dwóch klientów jednocześnie i sprawdzenie, że flock pozwala na zsynchronizowanie zapisów tak, aby zapis drugiego klienta wykonał się po drugim, sztucznie opóźnionym zapisie pierwszego
+- otwarcie pliku przez dwóch klientów jednocześnie i sprawdzenie, że flock pozwala na zsynchronizowanie zapisów tak, aby zapis drugiego klienta wykonał się po długim, sztucznie opóźnionym zapisie pierwszego
 
 ### Wyniki testu:
+<p align="justify">
 Test pozwolił nam na znalezienie błędu w implementacji unlink po stronie serwera, który wysyłał w odpowiedzi komunikat z kodem odpowiedzi na inną operację.
+Po wyeliminowaniu powższego błędu, test zakończył się z wynikiem pozytywnym.
+</p>
