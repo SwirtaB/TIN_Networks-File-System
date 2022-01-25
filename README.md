@@ -46,10 +46,7 @@ __Biblioteka kliencka__
 Biblioteka udostępnia programiście klasę NFSConnection, do stworzenia której programista musi podać nazwę użytkownika i hasło na systemie serwera oraz nazwę wybranego systemu plików udostępnianego przez serwer. Obiekt tej klasy enkapsuluje w swojej implementacji nawiązanie połączenia z serwerem, autoryzację użytkownika oraz wybranie systemu plików, i udostępnia następujące metody:
 </p>
 
-- `ConnectReturn connect(const std::string &hostName,
-                         const std::string &username,
-                         const std::string &password,
-                         const std::string &filesystemName)`
+- `ConnectReturn connect(const std::string &hostName, const std::string &username, const std::string &password, const std::string &filesystemName)`
 - `int open(char *path, int oflag, int mode)`
 - `int close(int fd)`
 - `ssize_t read(int fd, void *buf, size_t count)`
@@ -266,8 +263,8 @@ struct SMSGResultFlock {
 Przed komuniatem przesyłany jest integer 64-bitowy zawierający rozmiar przesyłanego dalej komunikatu. Pierwszy bajt każdego rodzaju komunikatu jest nagłówkiem identyfikującym jednoznacznie typ odbieranego komunikatu.
 
 ### Spodziewane odpowiedzi na komunikaty
-`CMSGConnectInfoUsername -> SMSGProvidePassword`
-`CMSGConnectInfoPassword -> SMSGProvideFSName | SMSGAuthorizationFailed`
+`CMSGConnectInfoUsername -> SMSGProvidePassword`  
+`CMSGConnectInfoPassword -> SMSGProvideFSName | SMSGAuthorizationFailed`  
 `CMSGConnectInfoFSName -> SMSGProvidePassword | SMSGAuthorizationFailed | SMSGAuthorizationOk`  
 `CMSGRequestOpen -> SMSGResultOpen`  
 `CMSGRequestClose -> SMSGResultClose`  
@@ -319,9 +316,9 @@ Kompilator: __clang 13__
 Narzędzie budowania: __CMake__  
 Formater kodu: __clang-format__ - format własny
 
-Użyte biblioteki:
-- systemowa biblioteka sockets do połączeń TCP
-- libcrypt oraz linuxowe shadow.h do weryfikacji hasła użytkownika klienta
+Użyte biblioteki:  
+- systemowa biblioteka sockets do połączeń TCP  
+- libcrypt oraz linuxowe shadow.h do weryfikacji hasła użytkownika klienta  
 
 ## Zawartość repozytorium
 Projekt składa się dwóch części: biblioteki implementującej protokół i serwer, oraz przykładowych programów w tym aplikacji klienckiej.
@@ -376,12 +373,11 @@ Widok ten udostępnia użytkownikowi jedynie dwa polecenia:
 - `connect <hostName> <username> <password> <filesystemName>` - Polecenia pozwala na połączenie się do systemu plików o nazwie "filesystemName" znadującego się na serwerze o adresie "hostname" jako użykownik o nazwie "username" i haśle "password"
 - `exit ` - Kończy działanie programu
 
+![Connect menu](./reports/figures/user_app_1.png "Menu nawiązywania połączenia")
+
 <p align="justify">
 Po nawiązaniu poprawnego połączenia z serwerem aplikacja przenosi użytkownika do menu głównego.
 </p>
-
-##### Wygląd menu do zawierania połączenia
-![Connect menu](./reports/figures/user_app_1.png)
 
 #### Menu główne
 <p align="justify">
@@ -398,9 +394,7 @@ Menu główne pozwala użytkownikowi na wywołanie poniższych poleceń:
 - `close` - służy do zamknięcia aktualnego deskryptora pliku.
 - `exit ` - Kończy działanie programu.
 
-##### Wygląd menu głównego
-![Main menu](./reports/figures/user_app_2.png "Main menu")
-
+![Main menu](./reports/figures/user_app_2.png "Menu główne")
 
 ## Serwer
 ### Implementacja
