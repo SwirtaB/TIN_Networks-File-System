@@ -1,14 +1,17 @@
 #include "NFSConnection.hpp"
 #include "NFSServer.hpp"
 
-#include <asm-generic/errno.h>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
-#include <sys/stat.h>
 #include <thread>
+
+extern "C"
+{
 #include <unistd.h>
+#include <sys/stat.h>
 #include <fcntl.h>
+}
 
 void test_server();
 void client1_test();
@@ -182,7 +185,7 @@ void client1_test() {
         std::cerr << "client1 failed to unlink test_file: " << connection.get_error() << std::endl;
         throw;
     }
-    int unlinkfd = open("examples/acceptance_test/testfs/test_file", O_PATH, 0);
+    int unlinkfd = open("examples/acceptance_test/testfs/test_file", O_RDONLY, 0);
     if (unlinkfd != -1) {
         std::cerr << "client1 unlink didnt delete file test_file" << std::endl;
         throw;
@@ -193,7 +196,7 @@ void client1_test() {
     }
 
 
-    int fddirfstat = connection.open("testdir", O_PATH, 0);
+    int fddirfstat = connection.open("testdir", O_RDONLY, 0);
     if (fddirfstat < 0) {
         std::cerr << "client1 failed to open testdir: " << connection.get_error() << std::endl;
         throw;
@@ -205,7 +208,7 @@ void client1_test() {
         throw;
     }
     struct stat localstatdir;
-    int lfddir = open("examples/acceptance_test/testfs/testdir", O_PATH, 0);
+    int lfddir = open("examples/acceptance_test/testfs/testdir", O_RDONLY, 0);
     if (lfddir < 0) {
         std::cerr << "client1 failed to open testdir locally: " << errno << std::endl;
         throw;

@@ -182,7 +182,7 @@ namespace nfs
         std::cout << "st_size: " << statbuf->st_size << "\n";
         std::cout << "st_blksize: " << statbuf->st_blksize << "\n";
         std::cout << "st_blocks: " << statbuf->st_blocks << "\n";
-        std::cout << "st_atim: " << ctime((const time_t*) &(statbuf->st_atim));
+        std::cout << "st_atime: " << ctime((const time_t*) &(statbuf->st_atime));
         std::cout << "st_mtime: " << ctime((const time_t*) &(statbuf->st_mtime));
         std::cout << "st_ctime: " << ctime((const time_t*) &(statbuf->st_ctime));
         getchar();
