@@ -320,9 +320,9 @@ void client2_test() {
         throw;
     }
 
-    int fdflock2 = connection.open("flock_test", O_RDONLY, 0);
-    if (fdflock < 0) {
-        std::cerr << "client2 failed to open flock_test: " << connection.get_error() << std::endl;
+    int rflock2 = connection.flock(fdflock, LOCK_UN);
+    if (rflock2 < 0) {
+        std::cerr << "client2 failed to unflock flock_test: " << connection.get_error() << std::endl;
         throw;
     }
 
