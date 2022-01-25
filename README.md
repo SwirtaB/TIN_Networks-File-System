@@ -348,7 +348,54 @@ Programy wykonywalne zostną zbudowane w folderze **bin**.
 
 
 ## Opis interfejsu użytkownika aplikacji klienckiej
-<!-- TODO -->
+### Informacje ogólne
+<p align="justify">
+Aplikacja kliencka jest prostą aplikacją konsolową, która pozwala na wywoływanie poleceń udostępnianych przez serwer. Interfejs aplikacji został podzielony na dwa widoki. Pierwszy pozwala na zawieranie połączenia z serwerem (Menu do zawierania połaczenia). Drugi widok służy do wykonywania operacji na serwerze poprzez wywoływanie poleceń (Menu główne). Obydwa widoki wyświetlają listę dostępnych komend wraz z ich argumentami, a następnie czekają na polecenie od użytkownika.
+</p>
+
+#### Format poleceń wpisywanych przez użytkownika
+<p align="justify">
+Jako identyfikator polecenia użytkownik może podać numer lub nazwę wybranej komendy z wyświetlonej listy.
+</p>
+
+```
+identyfikator_polecenia  argument_1  argument_2  ...  argument_n
+```
+
+### Opis dostępnych widoków aplikacji
+#### Menu do zawierania połączenia
+<p align="justify">
+Widok ten udostępnia użytkownikowi jedynie dwa polecenia:
+</p>
+
+- `connect <hostName> <username> <password> <filesystemName>` - Polecenia pozwala na połączenie się do systemu plików o nazwie "filesystemName" znadującego się na serwerze o adresie "hostname" jako użykownik o nazwie "username" i haśle "password"
+- `exit ` - Kończy działanie programu
+
+<p align="justify">
+Po nawiązaniu poprawnego połączenia z serwerem aplikacja przenosi użytkownika do menu głównego.
+</p>
+
+##### Wygląd menu do zawierania połączenia
+![Connect menu](./reports/figures/user_app_1.png)
+
+#### Menu główne
+<p align="justify">
+Menu główne pozwala użytkownikowi na wywołanie poniższych poleceń: 
+</p>
+
+- `open <path> <oflag> <mode>` - pozwala na otwarcie pliku/folderu znajdującego się na serwerze we wskazywanym przez ścieżkę (path) miejscu. Przy wywołaniu użytkownik musi również określić wartości liczbowe flagi (oflag) oraz trybu (mode). Polecenie tworzy deskryptor pliku, który jest wykorzystywany przez inne polecenia.
+- `download file <file> <target>` - pozwala na skopiowanie i pobranie pliku (file) z serwera, a następnie zapisanie go we wskazanym miejscu (target).
+- `send file <file> <target>` - pozwala na przesłanie na serwer pliku (file), a następnie zapisanie go we wskazanym miejscu (target) na serwerze.
+- `off_t lseek(int fd, off_t offset, int whence)` - służy do sprawdzenia aktualnej wartości offset dla pliku przypisanego do aktualnego deskryptora pliku.
+- `int fstat(int fd, struct stat *statbuf)` - pozwala na wyświetlenie statystyk aktualnego deskryptora pliku.
+- `unlink <path>` - służy do usuwania wskazanego przez ścieżkę (path) pliku z serwera. 
+- `flock <operation>` - pozwala na wywołanie systemowej funkcji flock dla wybranej operacji (operation).
+- `close` - służy do zamknięcia aktualnego deskryptora pliku.
+- `exit ` - Kończy działanie programu.
+
+##### Wygląd menu głównego
+![Main menu](https://github.com/SwirtaB/TIN_NFS/blob/main/reports/figures/user_app_2.png?raw=true "Main menu")
+
 
 ## Serwer
 ### Implementacja
