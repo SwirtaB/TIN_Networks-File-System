@@ -6,7 +6,7 @@
 * Woźniak Szymon 
 * Hebda Jakub 
 
-Data przekazania dokumentacji wstępnej: --.--.----
+Data przekazania dokumentacji końcowej: 25.01.2022
 
 ## Temat projektu
 <p align="justify">
