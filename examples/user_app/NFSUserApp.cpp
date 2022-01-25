@@ -76,6 +76,7 @@ namespace nfs
                 exit = true;
             } else {
                 runOperantionCall(operantionCall);
+                showInfo2("operation finished with ", connection.get_error());
             }
         }
         return 0;
@@ -258,27 +259,31 @@ namespace nfs
     {
         fd = connection.open(filename.c_str(), O_RDONLY, 0);
         if (fd <= 0) {
+            showInfo2("open failed with ", connection.get_error());
             return 1;
         }
         //find file size with lseek
         auto fileSize = connection.lseek(fd, 0, SEEK_END);
         if (fileSize == (off_t)-1) {
+            showInfo2("lseek failed with ", connection.get_error());
             return 1;
         }
         //lseek back to beginning
         auto seek_back = connection.lseek(fd, 0, SEEK_SET);
         if (seek_back == (off_t)-1) {
+            showInfo2("lseek failed with ", connection.get_error());
             return 1;
         }
         //creat buffer for read data and read
         char *buffer = new char[fileSize];
         int res = connection.read(fd, buffer, fileSize);
         if (res < 0) {
-            std::cerr << connection.get_error() << std::endl;
+            showInfo2("read failed with ", connection.get_error());
             return 1;
         }
         int res_close = connection.close(fd);
         if (res_close < 0) {
+            showInfo2("close failed with ", connection.get_error());
             return 1;
         }
         std::ofstream file(target.c_str(), std::ios::binary);
@@ -312,14 +317,17 @@ namespace nfs
 
         fd = connection.open(target.c_str(), O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
         if (fd <= 0) {
+            showInfo2("open failed with ", connection.get_error());
             return -1;
         }
         int res = connection.write(fd, file.data(), file.size());
         if (res < 0) {
+            showInfo2("write failed with ", connection.get_error());
             return -1;
         }
         int res_close = connection.close(fd);
         if (res_close < 0) {
+            showInfo2("close failed with ", connection.get_error());
             return -1;
         }
         showInfo2("Sent ", res);
