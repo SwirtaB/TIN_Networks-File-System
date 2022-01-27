@@ -333,7 +333,7 @@ W celu zbudowania biblioteki należy wywołać w terminalu:
 mkdir cmake-build
 cd cmake-build
 cmake ..
-cmake --build . --target tinnfs
+cmake --build .
 cd ..
 ```
 Biblioteka zostanie zbudowana w folderze **lib** jako biblioteka współdzielona *.so*.

@@ -26,7 +26,7 @@ if (UNIX AND NOT APPLE)
     target_link_libraries(${LIB_NAME} crypt)
 endif()
 
-set(BUILD_EXAMPLES True)
+set(BUILD_EXAMPLES False)
 if (BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif ()
